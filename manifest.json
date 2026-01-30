@@ -1,10 +1,10 @@
 {
-	"id": "newmermaid",
-	"name": "New Mermaid",
+	"id": "modern-mermaid",
+	"name": "Modern Mermaid",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Render latest Mermaid diagrams",
-	"author": "Your Name",
-	"authorUrl": "",
+	"description": "Render latest Mermaid diagrams in Obsidian.",
+	"author": "wis-graph",
+	"authorUrl": "https://github.com/wis-graph",
 	"isDesktopOnly": false
 }

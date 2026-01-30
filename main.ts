@@ -1,7 +1,7 @@
 import { Plugin } from 'obsidian';
 import mermaid from 'mermaid';
 
-export default class NewMermaidPlugin extends Plugin {
+export default class ModernMermaidPlugin extends Plugin {
 	async onload() {
 		mermaid.initialize({ startOnLoad: false });
 		
