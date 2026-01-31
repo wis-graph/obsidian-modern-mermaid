@@ -1,7 +1,7 @@
 {
 	"id": "modern-mermaid",
 	"name": "Modern Mermaid",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "Render latest Mermaid diagrams.",
 	"author": "wis-graph",
