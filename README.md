@@ -6,7 +6,7 @@ Render latest Mermaid diagrams with support for light/dark themes and image copy
 
 | Platform | Mermaid Version | Checked |
 |----------|----------------|----------|
-| Obsidian Official Build | v11.4.1 | - |
+| Obsidian Official Build | v11.4.1 | 26.2.1 |
 | This Plugin | **Always Latest** ✨ | - |
 
 This plugin automatically fetches and uses latest Mermaid version, giving you access to newest features and syntax!
@@ -34,15 +34,15 @@ This plugin automatically fetches and uses latest Mermaid version, giving you ac
 
 ### Basic Usage
 
-```mer
+\```mer
 graph TD
     A[Start] --> B[End]
-```
+\```
 
-```merdark
+\```merdark
 graph LR
     A[Dark] --> B[Theme]
-```
+\```
 
 ### Pan & Zoom
 
