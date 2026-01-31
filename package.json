@@ -1,15 +1,14 @@
 {
-	"name": "obsidian-bigtext-plugin",
+	"name": "obsidian-modern-mermaid",
 	"version": "1.0.0",
-	"description": "Render code block content as big text",
+	"description": "Render latest Mermaid diagrams in Obsidian",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "wis-graph",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
@@ -22,7 +21,6 @@
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
-		"@types/d3-dispatch": "^3.0.7",
 		"mermaid": "^11.12.2"
 	}
 }
