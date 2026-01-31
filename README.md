@@ -6,27 +6,10 @@ Render latest Mermaid diagrams with support for light/dark themes and image copy
 
 | Platform | Mermaid Version | Checked |
 |----------|----------------|----------|
-| Obsidian Official Build  | v11.4.1 | 26.2.1 |
+| Obsidian Official Build | v11.4.1 | - |
 | This Plugin | **Always Latest** ✨ | - |
 
-This plugin automatically fetches and uses the latest Mermaid version, giving you access to newest features and syntax!
-
-### Version 2.0.0 - Dynamic Loading System
-
-Major update with CDN-based dynamic loading:
-
-**New Features:**
-- 🚀 **Auto-update**: Automatically checks and loads latest Mermaid version on startup
-- ⚡ **Fast Loading**: Plugin size reduced from 5.9MB to 12KB with CDN loading
-- 💾 **Smart Caching**: Caches Mermaid version for instant loading
-- 🔔 **Notifications**: Shows update status via Obsidian notifications
-- 📡 **Offline Support**: Works offline with cached version
-
-**How it works:**
-1. On startup, checks npm registry for latest Mermaid version
-2. If new version available, fetches from CDN and caches it
-3. Shows notification when update completes
-4. Falls back to cached version if offline or CDN unavailable
+This plugin automatically fetches and uses latest Mermaid version, giving you access to newest features and syntax!
 
 ## Features
 
@@ -36,7 +19,7 @@ Major update with CDN-based dynamic loading:
   - \`\`\`merlight\`\`\` - Light theme with white background
   - \`\`\`merdark\`\`\` - Dark theme with black background
 - Click to copy diagrams as PNG to clipboard
-- **Pan & Zoom**: Mouse wheel to zoom (smooth, slow), drag to pan
+- **Pan & Zoom**: Mouse wheel to zoom, drag to pan
 - **Double-click to zoom**: Zoom to configured level (default: 2x), click again to reset
 - Zoom controls: Zoom in/out and reset buttons
 - Centered layout
@@ -49,6 +32,8 @@ Major update with CDN-based dynamic loading:
 
 ## Usage
 
+### Basic Usage
+
 ```mer
 graph TD
     A[Start] --> B[End]
@@ -58,6 +43,31 @@ graph TD
 graph LR
     A[Dark] --> B[Theme]
 ```
+
+### Pan & Zoom
+
+When **Enable Pan & Zoom** is enabled in settings, you can:
+
+**Mouse Wheel Zoom**
+- Scroll wheel up/down to zoom in/out
+- Zoom centers on your mouse cursor position
+- Zoom speed is optimized for smooth experience
+
+**Drag to Pan**
+- Click and drag on the diagram to move it around
+- Cursor changes to grab/grabbing for visual feedback
+
+**Double-Click Zoom**
+- Double-click anywhere on the diagram to zoom in
+- Double-click again to reset to original size
+- Zoom level is configurable in settings (1.5x - 5x, default: 2x)
+- Smooth transition animation for double-click zoom only
+
+**Zoom Controls**
+- Bottom-right corner has zoom control buttons:
+  - `−` button: Zoom out
+  - `+` button: Zoom in
+  - ⟲ button: Reset to original size and position
 
 ### Settings
 
@@ -75,12 +85,12 @@ You can customize plugin behavior in Obsidian Settings → Modern Mermaid:
 You can control the diagram size by adding the width (in pixels) on the first line of the code block:
 
 **Code:**
-````mer
+```mer
 300
 graph TD
     A[Small] --> B[Diagram]
     B --> C[300px wide]
-````
+```
 
 **Result:**
 ![Custom Width Example](./modern-mermaid-width.png)
@@ -92,7 +102,7 @@ If you don't specify a width, the diagram will fill the available space in your 
 The `mer` code block uses transparent background by default, making it perfect for integration with any theme or document style. You can configure this in plugin settings.
 
 **Code:**
-````mer
+```mer
 200
 ---
 title: Simple sample
@@ -105,7 +115,7 @@ stateDiagram-v2
     Moving --> Still
     Moving --> Crash
     Crash --> [*]
-````
+```
 
 **Result:**
 ![Transparent Background Example](./modern-mermaid-transparent-bg.png)
@@ -117,11 +127,11 @@ Note: The diagram has a transparent background, allowing it to blend seamlessly 
 The latest Mermaid version supports animated diagrams! The plugin automatically uses the latest version, so you can create animated flowcharts and state diagrams.
 
 **Code:**
-````merlight
+```merlight
 flowchart LR
     A e1@==> B
     e1@{ animate: true }
-````
+```
 
 **Result:**
 ![Animation Example](./mermaid-animation.gif)
