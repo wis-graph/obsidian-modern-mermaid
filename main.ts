@@ -342,6 +342,7 @@ export default class ModernMermaidPlugin extends Plugin {
 				wrapper.innerHTML = svg;
 				wrapper.style.cursor = 'grab';
 				wrapper.style.userSelect = 'none';
+				wrapper.style.display = 'inline-block';
 				
 				el.innerHTML = '';
 				el.appendChild(wrapper);
@@ -358,6 +359,14 @@ export default class ModernMermaidPlugin extends Plugin {
 				const svgElement = wrapper.querySelector('svg');
 				if (svgElement) {
 					svgElement.style.transition = 'transform 0.1s ease-out';
+					const svgWidth = svgElement.getAttribute('width');
+					const svgHeight = svgElement.getAttribute('height');
+					if (svgWidth) {
+						wrapper.style.width = svgWidth;
+					}
+					if (svgHeight) {
+						wrapper.style.height = svgHeight;
+					}
 				}
 				
 				wrapper.addEventListener('mousedown', (e: MouseEvent) => {

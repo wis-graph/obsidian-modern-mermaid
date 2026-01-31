@@ -318,6 +318,7 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
         wrapper.innerHTML = svg;
         wrapper.style.cursor = "grab";
         wrapper.style.userSelect = "none";
+        wrapper.style.display = "inline-block";
         el.innerHTML = "";
         el.appendChild(wrapper);
         let scale = 1;
@@ -331,6 +332,14 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
         const svgElement = wrapper.querySelector("svg");
         if (svgElement) {
           svgElement.style.transition = "transform 0.1s ease-out";
+          const svgWidth = svgElement.getAttribute("width");
+          const svgHeight = svgElement.getAttribute("height");
+          if (svgWidth) {
+            wrapper.style.width = svgWidth;
+          }
+          if (svgHeight) {
+            wrapper.style.height = svgHeight;
+          }
         }
         wrapper.addEventListener("mousedown", (e) => {
           e.preventDefault();
