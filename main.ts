@@ -1,28 +1,68 @@
-import { Plugin, Notice } from 'obsidian';
+import { Plugin, Notice, App, PluginSettingTab, Setting } from 'obsidian';
 
 interface MermaidCache {
 	version: string;
 	code: string;
 }
 
+interface ModernMermaidSettings {
+	mermaidVersion: string;
+}
+
+const DEFAULT_SETTINGS: ModernMermaidSettings = {
+	mermaidVersion: 'Not loaded'
+}
+
 export default class ModernMermaidPlugin extends Plugin {
 	private mermaidLoaded = false;
 	private mermaidLoading = false;
 	private mermaidLoadPromise: Promise<void> | null = null;
+	settings: ModernMermaidSettings = DEFAULT_SETTINGS;
 
 	async onload() {
-		await this.initializeMermaid();
+		console.log('Modern Mermaid plugin loading...');
+		
+		await this.loadSettings();
+		this.addSettingTab(new ModernMermaidSettingTab(this.app, this));
+		
+		window.addEventListener('unhandledrejection', (event) => {
+			if (event.reason && (event.reason as Error).message && (event.reason as Error).message.includes('mermaid')) {
+				console.error('Unhandled Mermaid error prevented:', event.reason);
+				event.preventDefault();
+			}
+		});
+
+		try {
+			await this.initializeMermaid();
+			console.log('Modern Mermaid plugin loaded successfully');
+		} catch (error) {
+			console.error('Failed to initialize Mermaid:', error);
+			new Notice('Mermaid 플러그인 초기화 실패');
+			return;
+		}
 		
 		this.registerMarkdownCodeBlockProcessor('mer', async (source, el) => {
-			await this.renderMermaid(source, el, 'default', '#ffffff');
+			try {
+				await this.renderMermaid(source, el, 'default', '#ffffff');
+			} catch (error) {
+				console.error('Mermaid code block processor error:', error);
+			}
 		});
 
 		this.registerMarkdownCodeBlockProcessor('merlight', async (source, el) => {
-			await this.renderMermaid(source, el, 'default', '#ffffff');
+			try {
+				await this.renderMermaid(source, el, 'default', '#ffffff');
+			} catch (error) {
+				console.error('Mermaid code block processor error:', error);
+			}
 		});
 
 		this.registerMarkdownCodeBlockProcessor('merdark', async (source, el) => {
-			await this.renderMermaid(source, el, 'dark', '#000000');
+			try {
+				await this.renderMermaid(source, el, 'dark', '#000000');
+			} catch (error) {
+				console.error('Mermaid code block processor error:', error);
+			}
 		});
 	}
 
@@ -51,34 +91,58 @@ export default class ModernMermaidPlugin extends Plugin {
 	}
 
 	async loadMermaid() {
-		const latestVersion = await this.getLatestVersion();
+		console.log('Loading Mermaid...');
 		const cached = this.getCache();
 
-		if (cached && cached.version === latestVersion) {
-			await this.loadMermaidFromCode(cached.code, latestVersion);
-			return;
-		}
-
-		if (cached && cached.version !== latestVersion) {
+		if (cached) {
+			console.log('Using cached Mermaid version:', cached.version);
 			try {
-				await this.fetchAndLoadLatest(latestVersion);
-			} catch (error) {
-				console.error('Failed to load latest version, using cache:', error);
 				await this.loadMermaidFromCode(cached.code, cached.version);
-				new Notice(`Mermaid 업데이트 실패, 버전 ${cached.version} 사용`);
+				console.log('Cached Mermaid loaded successfully');
+				
+				this.getLatestVersion().then(latestVersion => {
+					if (latestVersion !== cached.version) {
+						console.log('New version available:', latestVersion, '- will update');
+						this.fetchAndLoadLatest(latestVersion).catch(err => {
+							console.error('Background update failed:', err);
+						});
+					}
+				}).catch(err => {
+					console.error('Failed to check latest version:', err);
+				});
+				return;
+			} catch (error) {
+				console.error('Failed to load cached Mermaid:', error);
+				this.clearCache();
 			}
-			return;
 		}
 
-		await this.fetchAndLoadLatest(latestVersion);
+		console.log('No cache available, fetching latest version');
+		try {
+			const latestVersion = await this.getLatestVersion();
+			await this.fetchAndLoadLatest(latestVersion);
+			console.log('Latest Mermaid loaded successfully');
+		} catch (error) {
+			console.error('Failed to load any Mermaid version:', error);
+			throw new Error('Mermaid를 로드할 수 없습니다. 인터넷 연결을 확인하세요.');
+		}
 	}
 
 	async getLatestVersion(): Promise<string> {
+		console.log('Fetching latest Mermaid version...');
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 5000);
+		
 		try {
-			const response = await fetch('https://registry.npmjs.org/mermaid/latest');
+			const response = await fetch('https://registry.npmjs.org/mermaid/latest', { 
+				signal: controller.signal 
+			});
+			clearTimeout(timeout);
 			const data = await response.json();
+			console.log('Latest version:', data.version);
 			return data.version;
 		} catch (error) {
+			clearTimeout(timeout);
 			console.error('Failed to fetch latest version:', error);
 			throw error;
 		}
@@ -131,38 +195,93 @@ export default class ModernMermaidPlugin extends Plugin {
 	}
 
 	async fetchMermaidCode(version: string): Promise<string> {
+		console.log(`Fetching Mermaid code for version ${version}...`);
 		const url = `https://cdn.jsdelivr.net/npm/mermaid@${version}/dist/mermaid.min.js`;
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 30000);
 		
 		try {
-			const response = await fetch(url);
+			const response = await fetch(url, { signal: controller.signal });
+			clearTimeout(timeout);
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			return await response.text();
+			const code = await response.text();
+			console.log(`Mermaid code fetched successfully (${code.length} chars)`);
+			return code;
 		} catch (error) {
+			clearTimeout(timeout);
 			console.error('Failed to fetch Mermaid code:', error);
 			throw error;
 		}
 	}
 
 	async loadMermaidFromCode(code: string, version: string): Promise<void> {
+		console.log(`Loading Mermaid ${version} into DOM...`);
 		return new Promise((resolve, reject) => {
+			const blob = new Blob([code], { type: 'application/javascript' });
+			const url = URL.createObjectURL(blob);
 			const script = document.createElement('script');
-			script.textContent = code;
-			script.onload = () => {
+			script.src = url;
+			script.id = 'mermaid-dynamic-script';
+			
+			const timeout = setTimeout(() => {
+				console.warn('Mermaid load timeout, checking if available anyway...');
+				URL.revokeObjectURL(url);
 				const mermaid = (window as any).mermaid;
 				if (mermaid) {
-					mermaid.initialize({ startOnLoad: false });
-					resolve();
+					try {
+						mermaid.initialize({ startOnLoad: false });
+						resolve();
+					} catch (e) {
+						reject(new Error('Mermaid initialization failed'));
+					}
 				} else {
+					reject(new Error('Mermaid not loaded after timeout'));
+				}
+			}, 60000);
+
+			script.onload = () => {
+				console.log('Mermaid script loaded, checking for mermaid object...');
+				clearTimeout(timeout);
+				URL.revokeObjectURL(url);
+				const mermaid = (window as any).mermaid;
+				if (mermaid) {
+					console.log('Mermaid object found, initializing...');
+					try {
+						mermaid.initialize({ startOnLoad: false });
+						console.log('Mermaid initialized successfully');
+						this.settings.mermaidVersion = version;
+						this.saveSettings();
+						resolve();
+					} catch (e) {
+						console.error('Mermaid initialization failed:', e);
+						reject(new Error('Mermaid initialization failed'));
+					}
+				} else {
+					console.error('Mermaid object not found after load');
 					reject(new Error('Mermaid not loaded'));
 				}
 			};
+
 			script.onerror = () => {
+				clearTimeout(timeout);
+				URL.revokeObjectURL(url);
+				console.error('Script error occurred');
 				reject(new Error('Failed to load Mermaid from code'));
 			};
+
+			console.log('Appending script to head...');
 			document.head.appendChild(script);
 		});
+	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
 	}
 
 	parseWidth(source: string): { width: number | null; source: string } {
@@ -192,7 +311,23 @@ export default class ModernMermaidPlugin extends Plugin {
 			}
 			
 			mermaid.initialize({ startOnLoad: false, theme: themeConfig });
-			const { svg } = await mermaid.render(id, actualSource);
+			
+			let svg: string;
+			try {
+				const result = await mermaid.render(id, actualSource);
+				svg = result.svg;
+			} catch (renderError) {
+				console.error('Mermaid render error:', renderError);
+				el.innerHTML = `
+					<div style="padding: 20px; color: #ef4444; border: 1px solid #ef4444; border-radius: 8px; background-color: rgba(239, 68, 68, 0.1);">
+						<strong>Mermaid Rendering Error</strong><br><br>
+						${(renderError as Error).message}<br><br>
+						<small style="color: #6b7280;">Make sure you're using a valid Mermaid diagram type (e.g., graph, sequence, gantt, class, state, er, pie, journey, gitgraph, mindmap, timeline, sankey, block, architecture, requirement)</small>
+					</div>
+				`;
+				return;
+			}
+			
 			el.innerHTML = svg;
 			el.style.backgroundColor = backgroundColor;
 			el.style.padding = '20px';
@@ -318,12 +453,55 @@ export default class ModernMermaidPlugin extends Plugin {
 
 			el.appendChild(copyButton);
 		} catch (error) {
-			el.textContent = 'Mermaid rendering error: ' + (error as Error).message;
-			el.style.color = 'red';
+			console.error('Unexpected Mermaid error:', error);
+			el.innerHTML = `
+				<div style="padding: 20px; color: #ef4444; border: 1px solid #ef4444; border-radius: 8px; background-color: rgba(239, 68, 68, 0.1);">
+					<strong>Mermaid Rendering Error</strong><br><br>
+					${(error as Error).message}<br><br>
+					<small style="color: #6b7280;">The plugin encountered an unexpected error. Please check the console for details.</small>
+				</div>
+			`;
 		}
 	}
 
 	onunload() {
 		this.clearCache();
+	}
+}
+
+class ModernMermaidSettingTab extends PluginSettingTab {
+	plugin: ModernMermaidPlugin;
+
+	constructor(app: App, plugin: ModernMermaidPlugin) {
+		super(app, plugin);
+		this.plugin = plugin;
+	}
+
+	display(): void {
+		const { containerEl } = this;
+
+		containerEl.empty();
+
+		containerEl.createEl('h2', { text: 'Modern Mermaid Settings' });
+
+		new Setting(containerEl)
+			.setName('Mermaid Version')
+			.setDesc('Currently loaded Mermaid library version')
+			.addText(text => text
+				.setDisabled(true)
+				.setValue(this.plugin.settings.mermaidVersion));
+
+		new Setting(containerEl)
+			.setName('Clear Cache')
+			.setDesc('Clear cached Mermaid library and force re-download')
+			.addButton(button => button
+				.setButtonText('Clear Cache')
+				.onClick(async () => {
+					this.plugin.clearCache();
+					this.plugin.settings.mermaidVersion = 'Not loaded';
+					await this.plugin.saveSettings();
+					new Notice('Cache cleared. Please reload Obsidian to re-download Mermaid.');
+					this.display();
+				}));
 	}
 }

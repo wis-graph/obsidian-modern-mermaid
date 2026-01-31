@@ -2,3 +2,5 @@ node_modules/
 dist/
 .git/
 .DS_Store
+main.js.map
+data.json
