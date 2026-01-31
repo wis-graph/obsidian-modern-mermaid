@@ -28,7 +28,7 @@ export class MermaidRenderer {
 		if (this.settings.enablePanZoom) {
 			this.renderWithPanZoom(svg, el);
 		} else {
-			el.innerHTML = svg;
+			this.renderWithoutPanZoom(svg, el);
 		}
 
 		this.applyStyles(el, backgroundColor, width);
@@ -41,6 +41,7 @@ export class MermaidRenderer {
 		wrapper.style.cursor = 'grab';
 		wrapper.style.userSelect = 'none';
 		wrapper.style.display = 'inline-block';
+		wrapper.style.textAlign = 'center';
 
 		el.innerHTML = '';
 		el.appendChild(wrapper);
@@ -48,6 +49,8 @@ export class MermaidRenderer {
 		const svgElement = wrapper.querySelector('svg');
 		if (svgElement) {
 			svgElement.style.transition = 'transform 0.1s ease-out';
+			svgElement.style.display = 'block';
+			svgElement.style.margin = '0 auto';
 			const svgWidth = svgElement.getAttribute('width');
 			const svgHeight = svgElement.getAttribute('height');
 			if (svgWidth) {
@@ -62,6 +65,16 @@ export class MermaidRenderer {
 		panZoomHandler.setup();
 
 		this.addZoomControls(panZoomHandler, el);
+	}
+
+	private renderWithoutPanZoom(svg: string, el: HTMLElement): void {
+		el.innerHTML = svg;
+
+		const svgElement = el.querySelector('svg');
+		if (svgElement) {
+			svgElement.style.display = 'block';
+			svgElement.style.margin = '0 auto';
+		}
 	}
 
 	private addZoomControls(panZoomHandler: PanZoomHandler, el: HTMLElement): void {
