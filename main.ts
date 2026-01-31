@@ -7,6 +7,7 @@ import { MermaidCache, ModernMermaidSettings, DEFAULT_SETTINGS } from './types';
 export default class ModernMermaidPlugin extends Plugin {
 	private mermaidLoader: MermaidLoader;
 	private settingsManager: SettingsManager;
+	private unhandledRejectionHandler: ((event: PromiseRejectionEvent) => void) | null = null;
 	settings: ModernMermaidSettings = DEFAULT_SETTINGS;
 
 	async onload() {
@@ -19,12 +20,13 @@ export default class ModernMermaidPlugin extends Plugin {
 		this.settings = this.settingsManager.getSettings();
 		this.addSettingTab(new ModernMermaidSettingTab(this.app, this));
 		
-		window.addEventListener('unhandledrejection', (event) => {
+		this.unhandledRejectionHandler = (event) => {
 			if (event.reason && (event.reason as Error).message && (event.reason as Error).message.includes('mermaid')) {
 				console.error('Unhandled Mermaid error prevented:', event.reason);
 				event.preventDefault();
 			}
-		});
+		};
+		window.addEventListener('unhandledrejection', this.unhandledRejectionHandler);
 
 		try {
 			await this.mermaidLoader.initializeMermaid();
@@ -83,6 +85,11 @@ export default class ModernMermaidPlugin extends Plugin {
 	}
 
 	onunload() {
+		if (this.unhandledRejectionHandler) {
+			window.removeEventListener('unhandledrejection', this.unhandledRejectionHandler);
+			this.unhandledRejectionHandler = null;
+		}
+		this.mermaidLoader.cleanup();
 		this.clearCache();
 	}
 }

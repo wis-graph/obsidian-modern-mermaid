@@ -22,6 +22,7 @@ export class PanZoomHandler {
 		pointX: 0,
 		pointY: 0
 	};
+	private isPanningActive: boolean = false;
 
 	constructor(
 		private wrapper: HTMLElement,
@@ -40,6 +41,10 @@ export class PanZoomHandler {
 	}
 
 	destroy(): void {
+		if (this.isPanningActive) {
+			window.removeEventListener('mousemove', this.handleWindowMouseMove);
+			window.removeEventListener('mouseup', this.handleWindowMouseUp);
+		}
 		this.wrapper.removeEventListener('mousedown', this.handleMouseDown);
 		this.wrapper.removeEventListener('wheel', this.handleWheel);
 		this.wrapper.removeEventListener('dblclick', this.handleDoubleClick);
@@ -50,6 +55,7 @@ export class PanZoomHandler {
 		this.state.startX = e.clientX - this.state.translateX;
 		this.state.startY = e.clientY - this.state.translateY;
 		this.state.panning = true;
+		this.isPanningActive = true;
 		this.wrapper.style.cursor = 'grabbing';
 		window.addEventListener('mousemove', this.handleWindowMouseMove);
 		window.addEventListener('mouseup', this.handleWindowMouseUp);
@@ -57,6 +63,7 @@ export class PanZoomHandler {
 
 	private handleWindowMouseUp = () => {
 		this.state.panning = false;
+		this.isPanningActive = false;
 		this.wrapper.style.cursor = 'grab';
 		window.removeEventListener('mousemove', this.handleWindowMouseMove);
 		window.removeEventListener('mouseup', this.handleWindowMouseUp);

@@ -213,6 +213,7 @@ var MermaidLoader = class {
   }
   async loadMermaidFromCode(code, version) {
     console.log(`Loading Mermaid ${version} into DOM...`);
+    this.cleanupExistingScript();
     return new Promise((resolve, reject) => {
       const blob = new Blob([code], { type: "application/javascript" });
       const url = URL.createObjectURL(blob);
@@ -264,6 +265,17 @@ var MermaidLoader = class {
       document.head.appendChild(script);
     });
   }
+  cleanupExistingScript() {
+    const existingScript = document.getElementById("mermaid-dynamic-script");
+    if (existingScript) {
+      existingScript.remove();
+    }
+    delete window.mermaid;
+    this.pluginMermaidInstance = null;
+  }
+  cleanup() {
+    this.cleanupExistingScript();
+  }
   getMermaidInstance() {
     return this.pluginMermaidInstance;
   }
@@ -291,17 +303,20 @@ var PanZoomHandler = class {
       pointX: 0,
       pointY: 0
     };
+    this.isPanningActive = false;
     this.handleMouseDown = (e) => {
       e.preventDefault();
       this.state.startX = e.clientX - this.state.translateX;
       this.state.startY = e.clientY - this.state.translateY;
       this.state.panning = true;
+      this.isPanningActive = true;
       this.wrapper.style.cursor = "grabbing";
       window.addEventListener("mousemove", this.handleWindowMouseMove);
       window.addEventListener("mouseup", this.handleWindowMouseUp);
     };
     this.handleWindowMouseUp = () => {
       this.state.panning = false;
+      this.isPanningActive = false;
       this.wrapper.style.cursor = "grab";
       window.removeEventListener("mousemove", this.handleWindowMouseMove);
       window.removeEventListener("mouseup", this.handleWindowMouseUp);
@@ -369,6 +384,10 @@ var PanZoomHandler = class {
     this.wrapper.addEventListener("dblclick", this.handleDoubleClick);
   }
   destroy() {
+    if (this.isPanningActive) {
+      window.removeEventListener("mousemove", this.handleWindowMouseMove);
+      window.removeEventListener("mouseup", this.handleWindowMouseUp);
+    }
     this.wrapper.removeEventListener("mousedown", this.handleMouseDown);
     this.wrapper.removeEventListener("wheel", this.handleWheel);
     this.wrapper.removeEventListener("dblclick", this.handleDoubleClick);
@@ -443,6 +462,7 @@ var _MermaidRenderer = class {
   constructor(mermaid, settings) {
     this.mermaid = mermaid;
     this.settings = settings;
+    this.timeoutIds = /* @__PURE__ */ new Set();
   }
   async render(source, el, theme, backgroundColor) {
     const { width, source: actualSource } = this.parseWidth(source);
@@ -624,10 +644,12 @@ var _MermaidRenderer = class {
   showCopyFeedback(button, icon, color, timeout) {
     button.innerHTML = icon;
     button.style.color = color;
-    setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
       button.innerHTML = COPY_ICON;
       button.style.color = "currentColor";
+      this.timeoutIds.delete(timeoutId);
     }, timeout);
+    this.timeoutIds.add(timeoutId);
   }
   async handleCopyClick(el, button, backgroundColor) {
     const originalIcon = button.innerHTML;
@@ -674,6 +696,12 @@ var _MermaidRenderer = class {
     this.setupCopyButtonEvents(button, el, backgroundColor);
     el.appendChild(button);
   }
+  cleanup() {
+    for (const timeoutId of this.timeoutIds) {
+      clearTimeout(timeoutId);
+    }
+    this.timeoutIds.clear();
+  }
 };
 var MermaidRenderer = _MermaidRenderer;
 MermaidRenderer.panZoomHandlers = /* @__PURE__ */ new WeakMap();
@@ -682,6 +710,7 @@ MermaidRenderer.panZoomHandlers = /* @__PURE__ */ new WeakMap();
 var ModernMermaidPlugin = class extends import_obsidian.Plugin {
   constructor() {
     super(...arguments);
+    this.unhandledRejectionHandler = null;
     this.settings = DEFAULT_SETTINGS;
   }
   async onload() {
@@ -691,12 +720,13 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
     await this.settingsManager.loadSettings();
     this.settings = this.settingsManager.getSettings();
     this.addSettingTab(new ModernMermaidSettingTab(this.app, this));
-    window.addEventListener("unhandledrejection", (event) => {
+    this.unhandledRejectionHandler = (event) => {
       if (event.reason && event.reason.message && event.reason.message.includes("mermaid")) {
         console.error("Unhandled Mermaid error prevented:", event.reason);
         event.preventDefault();
       }
-    });
+    };
+    window.addEventListener("unhandledrejection", this.unhandledRejectionHandler);
     try {
       await this.mermaidLoader.initializeMermaid();
       console.log("Modern Mermaid plugin loaded successfully");
@@ -745,6 +775,11 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
     await this.settingsManager.saveSettings();
   }
   onunload() {
+    if (this.unhandledRejectionHandler) {
+      window.removeEventListener("unhandledrejection", this.unhandledRejectionHandler);
+      this.unhandledRejectionHandler = null;
+    }
+    this.mermaidLoader.cleanup();
     this.clearCache();
   }
 };

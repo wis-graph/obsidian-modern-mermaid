@@ -8,6 +8,7 @@ const ERROR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="1
 
 export class MermaidRenderer {
 	private static panZoomHandlers = new WeakMap<HTMLElement, PanZoomHandler>();
+	private timeoutIds = new Set<number>();
 	constructor(
 		private mermaid: any,
 		private settings: ModernMermaidSettings
@@ -229,10 +230,12 @@ export class MermaidRenderer {
 	private showCopyFeedback(button: HTMLButtonElement, icon: string, color: string, timeout: number): void {
 		button.innerHTML = icon;
 		button.style.color = color;
-		setTimeout(() => {
+		const timeoutId = window.setTimeout(() => {
 			button.innerHTML = COPY_ICON;
 			button.style.color = 'currentColor';
+			this.timeoutIds.delete(timeoutId);
 		}, timeout);
+		this.timeoutIds.add(timeoutId);
 	}
 
 	private async handleCopyClick(el: HTMLElement, button: HTMLButtonElement, backgroundColor: string): Promise<void> {
@@ -285,5 +288,12 @@ export class MermaidRenderer {
 		const button = this.createCopyButtonElement();
 		this.setupCopyButtonEvents(button, el, backgroundColor);
 		el.appendChild(button);
+	}
+
+	cleanup(): void {
+		for (const timeoutId of this.timeoutIds) {
+			clearTimeout(timeoutId);
+		}
+		this.timeoutIds.clear();
 	}
 }

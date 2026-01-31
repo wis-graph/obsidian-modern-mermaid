@@ -166,6 +166,8 @@ export class MermaidLoader {
 
 	async loadMermaidFromCode(code: string, version: string): Promise<void> {
 		console.log(`Loading Mermaid ${version} into DOM...`);
+		this.cleanupExistingScript();
+		
 		return new Promise((resolve, reject) => {
 			const blob = new Blob([code], { type: 'application/javascript' });
 			const url = URL.createObjectURL(blob);
@@ -221,6 +223,20 @@ export class MermaidLoader {
 			console.log('Appending script to head...');
 			document.head.appendChild(script);
 		});
+	}
+
+	private cleanupExistingScript(): void {
+		const existingScript = document.getElementById('mermaid-dynamic-script');
+		if (existingScript) {
+			existingScript.remove();
+		}
+		
+		delete (window as any).mermaid;
+		this.pluginMermaidInstance = null;
+	}
+
+	cleanup(): void {
+		this.cleanupExistingScript();
 	}
 
 	getMermaidInstance(): any {
