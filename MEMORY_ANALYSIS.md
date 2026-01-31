@@ -592,14 +592,14 @@ class ModernMermaidSettingTab extends PluginSettingTab {
 |----|------|-------|----------|-------|--------|
 | 1 | main.ts | 10, 23-29, 88-93 | 🔴 CRITICAL | Global event listener not removed | ✅ Fixed |
 | 2 | pan-zoom-handler.ts | 25, 42-46, 52, 55, 60 | 🟠 HIGH | Window listeners leak if destroyed mid-pan | ✅ Fixed |
-| 3 | mermaid-renderer.ts | 10, 229-236, 284-289 | 🟠 HIGH | Untracked setTimeout IDs | ✅ Fixed |
+| 3 | mermaid-renderer.ts | 11, 229-236, 284-289 | 🟠 HIGH | Untracked setTimeout IDs | ✅ Fixed |
 | 4 | mermaid-loader.ts | 169, 227-234, 91-94 | 🟠 HIGH | Mermaid script never cleaned up | ✅ Fixed |
-| 5 | main.ts | 85-87 | 🟠 HIGH | Missing PanZoomHandler cleanup on unload | ❌ Not Fixed |
-| 6 | mermaid-renderer.ts | 172-212 | 🟡 MEDIUM | Image cleanup on error | ❌ Not Fixed |
-| 7 | mermaid-loader.ts | 78-95, 145-164 | 🟡 MEDIUM | AbortController timeout edge case | ❌ Not Fixed |
-| 8 | mermaid-renderer.ts | 268-287 | 🟡 MEDIUM | No explicit cleanup for copy button | ❌ Not Fixed |
-| 9 | button-helper.ts | 26-51 | 🟡 MEDIUM | No cleanup API for control buttons | ❌ Not Fixed |
-| 10 | mermaid-renderer.ts | 10 | 🟢 LOW | ✓ WeakMap used correctly | ✅ Good |
+| 5 | mermaid-renderer.ts | 12-15, 81, 17-18, 19, 90-93 | 🟠 HIGH | Missing PanZoomHandler cleanup on unload | ✅ Fixed |
+| 6 | mermaid-renderer.ts | 183-215 | 🟡 MEDIUM | Image cleanup on error | ✅ Fixed |
+| 7 | mermaid-loader.ts | 78-95, 145-164 | 🟡 MEDIUM | AbortController timeout edge case | ✅ Fixed |
+| 8 | mermaid-renderer.ts | 291-313 | 🟡 MEDIUM | No explicit cleanup for copy button | ✅ Fixed |
+| 9 | button-helper.ts, mermaid-renderer.ts | 20-24, 29-73, 13, 91-120, 318-324 | 🟡 MEDIUM | No cleanup API for control buttons | ✅ Fixed |
+| 10 | mermaid-renderer.ts | 11 | 🟢 LOW | ✓ WeakMap used correctly | ✅ Good |
 | 11 | N/A | N/A | 🟢 LOW | No RAF usage | ✅ Good |
 | 12 | main.ts | 90-166 | 🟢 LOW | SettingsTab cleanup handled by Obsidian | ✅ Good |
 
@@ -612,13 +612,12 @@ class ModernMermaidSettingTab extends PluginSettingTab {
 2. ~~**Fix window event listener leak** (#2) - Track panning state and clean up in `destroy()`~~ ✅ **COMPLETED**
 3. ~~**Track setTimeout IDs** (#3) - Store and clear timeouts appropriately~~ ✅ **COMPLETED**
 4. ~~**Clean up Mermaid script** (#4) - Add cleanup method and call on unload~~ ✅ **COMPLETED**
-4. **Clean up Mermaid script** (#4) - Add cleanup method and call on unload
-5. **Add PanZoomHandler cleanup** (#5) - Ensure all handlers are destroyed on unload
+5. ~~**Add PanZoomHandler cleanup** (#5) - Ensure all handlers are destroyed on unload~~ ✅ **COMPLETED**
 
 ### Short-term Improvements (Medium Priority):
-6. **Clean up image on error** (#6) - Add explicit cleanup in error handlers
-7. **Add copy button cleanup** (#8) - Track and clean up listeners explicitly
-8. **Add button helper cleanup API** (#9) - Return cleanup function
+6. ~~**Clean up image on error** (#6) - Add explicit cleanup in error handlers~~ ✅ **COMPLETED**
+7. ~~**Add copy button cleanup** (#8) - Track and clean up listeners explicitly~~ ✅ **COMPLETED**
+8. ~~**Add button helper cleanup API** (#9) - Return cleanup function~~ ✅ **COMPLETED**
 
 ### Best Practices (Low Priority):
 9. Review and document the cleanup patterns used
@@ -649,3 +648,4 @@ After implementing fixes, test these scenarios:
 | 2026-02-01 | Issue #2 | ✅ Fixed | Window event listener leak fixed in pan-zoom-handler.ts |
 | 2026-02-01 | Issue #3 | ✅ Fixed | Untracked setTimeout references fixed in mermaid-renderer.ts |
 | 2026-02-01 | Issue #4 | ✅ Fixed | Mermaid script cleanup added in mermaid-loader.ts |
+| 2026-02-01 | Issues #5-9 | ✅ Fixed | All remaining High/Medium priority issues fixed |
