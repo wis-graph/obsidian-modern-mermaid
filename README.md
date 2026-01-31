@@ -1,4 +1,4 @@
-# New Mermaid Plugin
+# Modern Mermaid
 
 Render latest Mermaid diagrams in Obsidian with support for light/dark themes and image copy functionality.
 
