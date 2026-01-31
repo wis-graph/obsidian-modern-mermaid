@@ -17,7 +17,7 @@ This document collects potential features and improvements for the Modern Mermai
 ## 3. Diagram Size Control
 
 - Fixed height option
-- Zoom in/out functionality
+- Zoom in/out functionality ✅ **COMPLETED** (v2.1.0)
 - Real-time size adjustment handles
 
 ## 4. Version Management
