@@ -25,6 +25,11 @@ graph LR
     A[Dark] --> B[Theme]
 ```
 
+## Screenshots
+
+![Modern Mermaid Demo 1](./mermaid-demo-1.png)
+![Modern Mermaid Demo 2](./mermaid-demo-2.png)
+
 ## Credits
 
 Built with [Obsidian Sample Plugin](https://github.com/obsidianmd/obsidian-sample-plugin)
