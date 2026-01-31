@@ -25,6 +25,18 @@ graph LR
     A[Dark] --> B[Theme]
 ```
 
+### Custom Width
+
+You can set a custom width for the diagram by adding the width as the first line:
+
+```mer
+300
+graph TD
+    A[Start] --> B[End]
+```
+
+This will render the diagram with a width of 300px.
+
 ## Screenshots
 
 ![Modern Mermaid Demo 1](./mermaid-demo-1.png)
