@@ -140,14 +140,14 @@ var MermaidLoader = class {
       const response = await fetch("https://registry.npmjs.org/mermaid/latest", {
         signal: controller.signal
       });
-      clearTimeout(timeout);
       const data = await response.json();
       console.log("Latest version:", data.version);
       return data.version;
     } catch (error) {
-      clearTimeout(timeout);
       console.error("Failed to fetch latest version:", error);
       throw error;
+    } finally {
+      clearTimeout(timeout);
     }
   }
   getCache() {
@@ -198,7 +198,6 @@ var MermaidLoader = class {
     const timeout = setTimeout(() => controller.abort(), 3e4);
     try {
       const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -206,9 +205,10 @@ var MermaidLoader = class {
       console.log(`Mermaid code fetched successfully (${code.length} chars)`);
       return code;
     } catch (error) {
-      clearTimeout(timeout);
       console.error("Failed to fetch Mermaid code:", error);
       throw error;
+    } finally {
+      clearTimeout(timeout);
     }
   }
   async loadMermaidFromCode(code, version) {
@@ -437,21 +437,30 @@ var BUTTON_STYLES = {
 function createControlButton(container, options) {
   const btn = document.createElement("button");
   btn.innerHTML = options.icon;
-  Object.assign(btn.style, BUTTON_STYLES.button);
-  btn.addEventListener("mouseenter", () => {
+  const mouseEnterHandler = () => {
     Object.assign(btn.style, BUTTON_STYLES.hover);
-  });
-  btn.addEventListener("mouseleave", () => {
+  };
+  const mouseLeaveHandler = () => {
     Object.assign(btn.style, BUTTON_STYLES.button);
-  });
-  btn.addEventListener("click", () => {
+  };
+  const clickHandler = () => {
     if (options.onClickLabel) {
       console.log(options.onClickLabel);
     }
     options.onClick();
-  });
+  };
+  Object.assign(btn.style, BUTTON_STYLES.button);
+  btn.addEventListener("mouseenter", mouseEnterHandler);
+  btn.addEventListener("mouseleave", mouseLeaveHandler);
+  btn.addEventListener("click", clickHandler);
   container.appendChild(btn);
-  return btn;
+  const cleanup = () => {
+    btn.removeEventListener("mouseenter", mouseEnterHandler);
+    btn.removeEventListener("mouseleave", mouseLeaveHandler);
+    btn.removeEventListener("click", clickHandler);
+    btn.remove();
+  };
+  return { button: btn, cleanup };
 }
 
 // ui/mermaid-renderer.ts
@@ -463,6 +472,13 @@ var _MermaidRenderer = class {
     this.mermaid = mermaid;
     this.settings = settings;
     this.timeoutIds = /* @__PURE__ */ new Set();
+    this.zoomControlsCleanup = null;
+  }
+  static cleanupAllHandlers() {
+    for (const handler of _MermaidRenderer.activeHandlers) {
+      handler.destroy();
+    }
+    _MermaidRenderer.activeHandlers.clear();
   }
   async render(source, el, theme, backgroundColor) {
     const { width, source: actualSource } = this.parseWidth(source);
@@ -487,6 +503,9 @@ var _MermaidRenderer = class {
     this.addCopyButton(el, backgroundColor);
   }
   renderWithPanZoom(svg, el) {
+    if (this.zoomControlsCleanup) {
+      this.zoomControlsCleanup();
+    }
     const wrapper = document.createElement("div");
     wrapper.innerHTML = svg;
     wrapper.style.cursor = "grab";
@@ -512,10 +531,12 @@ var _MermaidRenderer = class {
     const existingHandler = _MermaidRenderer.panZoomHandlers.get(wrapper);
     if (existingHandler) {
       existingHandler.destroy();
+      _MermaidRenderer.activeHandlers.delete(existingHandler);
     }
     const panZoomHandler = new PanZoomHandler(wrapper, svgElement, this.settings);
     panZoomHandler.setup();
     _MermaidRenderer.panZoomHandlers.set(wrapper, panZoomHandler);
+    _MermaidRenderer.activeHandlers.add(panZoomHandler);
     this.addZoomControls(panZoomHandler, el);
   }
   renderWithoutPanZoom(svg, el) {
@@ -534,19 +555,27 @@ var _MermaidRenderer = class {
     controlsDiv.style.display = "flex";
     controlsDiv.style.gap = "4px";
     controlsDiv.style.zIndex = "10";
-    createControlButton(controlsDiv, {
+    const cleanups = [];
+    const { button: btn1, cleanup: cleanup1 } = createControlButton(controlsDiv, {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m8 11 2 2"/><path d="m11 8 2 2"/><path d="m14 11 2 2"/><path d="m11 14 2 2"/><path d="m8 11-2-2"/><path d="m11 8-2-2"/><path d="m14 11-2-2"/><path d="m11 14-2-2"/></svg>`,
       onClick: () => panZoomHandler.zoomOut()
     });
-    createControlButton(controlsDiv, {
+    cleanups.push(cleanup1);
+    const { button: btn2, cleanup: cleanup2 } = createControlButton(controlsDiv, {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m9 9 3 3"/><path d="m9 12 3 3"/><path d="m12 9 3 3"/><path d="m12 12 3 3"/></svg>`,
       onClick: () => panZoomHandler.zoomIn()
     });
-    createControlButton(controlsDiv, {
+    cleanups.push(cleanup2);
+    const { button: btn3, cleanup: cleanup3 } = createControlButton(controlsDiv, {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 17h6"/><path d="M12 21h6"/><path d="M12 7h6"/></svg>`,
       onClick: () => panZoomHandler.reset()
     });
+    cleanups.push(cleanup3);
     el.appendChild(controlsDiv);
+    this.zoomControlsCleanup = () => {
+      cleanups.forEach((cleanup) => cleanup());
+      controlsDiv.remove();
+    };
   }
   applyStyles(el, backgroundColor, width) {
     if (backgroundColor !== "transparent") {
@@ -598,6 +627,11 @@ var _MermaidRenderer = class {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement("canvas");
       const img = new Image();
+      const cleanup = () => {
+        img.onload = null;
+        img.onerror = null;
+        img.src = "";
+      };
       img.onload = () => {
         try {
           const bbox = svgElement.getBoundingClientRect();
@@ -605,6 +639,7 @@ var _MermaidRenderer = class {
           canvas.height = Math.ceil((bbox.height || img.height) * 2);
           const ctx = canvas.getContext("2d");
           if (!ctx) {
+            cleanup();
             throw new Error("Canvas context is null");
           }
           if (this.settings.includeBackgroundInCopy && backgroundColor !== "transparent") {
@@ -613,6 +648,7 @@ var _MermaidRenderer = class {
           }
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           canvas.toBlob((blob) => {
+            cleanup();
             if (blob) {
               resolve(blob);
             } else {
@@ -620,10 +656,12 @@ var _MermaidRenderer = class {
             }
           }, "image/png");
         } catch (drawErr) {
+          cleanup();
           reject(drawErr);
         }
       };
       img.onerror = () => {
+        cleanup();
         reject(new Error("Image load failed"));
       };
       img.src = url;
@@ -679,17 +717,23 @@ var _MermaidRenderer = class {
     return button;
   }
   setupCopyButtonEvents(button, el, backgroundColor) {
-    button.addEventListener("mouseenter", () => {
+    const mouseEnterHandler = () => {
       button.style.backgroundColor = "rgba(128, 128, 128, 0.2)";
       button.style.opacity = "1";
-    });
-    button.addEventListener("mouseleave", () => {
+    };
+    const mouseLeaveHandler = () => {
       button.style.backgroundColor = "rgba(128, 128, 128, 0.1)";
       button.style.opacity = "0.7";
-    });
-    button.addEventListener("click", async () => {
+    };
+    const clickHandler = async () => {
+      if (!document.contains(button)) {
+        return;
+      }
       await this.handleCopyClick(el, button, backgroundColor);
-    });
+    };
+    button.addEventListener("mouseenter", mouseEnterHandler);
+    button.addEventListener("mouseleave", mouseLeaveHandler);
+    button.addEventListener("click", clickHandler);
   }
   addCopyButton(el, backgroundColor) {
     const button = this.createCopyButtonElement();
@@ -701,10 +745,15 @@ var _MermaidRenderer = class {
       clearTimeout(timeoutId);
     }
     this.timeoutIds.clear();
+    if (this.zoomControlsCleanup) {
+      this.zoomControlsCleanup();
+      this.zoomControlsCleanup = null;
+    }
   }
 };
 var MermaidRenderer = _MermaidRenderer;
 MermaidRenderer.panZoomHandlers = /* @__PURE__ */ new WeakMap();
+MermaidRenderer.activeHandlers = /* @__PURE__ */ new Set();
 
 // main.ts
 var ModernMermaidPlugin = class extends import_obsidian.Plugin {
@@ -779,6 +828,7 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
       window.removeEventListener("unhandledrejection", this.unhandledRejectionHandler);
       this.unhandledRejectionHandler = null;
     }
+    MermaidRenderer.cleanupAllHandlers();
     this.mermaidLoader.cleanup();
     this.clearCache();
   }

@@ -79,19 +79,19 @@ export class MermaidLoader {
 		console.log('Fetching latest Mermaid version...');
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), 5000);
-		
+
 		try {
-			const response = await fetch('https://registry.npmjs.org/mermaid/latest', { 
-				signal: controller.signal 
+			const response = await fetch('https://registry.npmjs.org/mermaid/latest', {
+				signal: controller.signal
 			});
-			clearTimeout(timeout);
 			const data = await response.json();
 			console.log('Latest version:', data.version);
 			return data.version;
 		} catch (error) {
-			clearTimeout(timeout);
 			console.error('Failed to fetch latest version:', error);
 			throw error;
+		} finally {
+			clearTimeout(timeout);
 		}
 	}
 
@@ -147,10 +147,9 @@ export class MermaidLoader {
 		const url = `https://cdn.jsdelivr.net/npm/mermaid@${version}/dist/mermaid.min.js`;
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), 30000);
-		
+
 		try {
 			const response = await fetch(url, { signal: controller.signal });
-			clearTimeout(timeout);
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
@@ -158,9 +157,10 @@ export class MermaidLoader {
 			console.log(`Mermaid code fetched successfully (${code.length} chars)`);
 			return code;
 		} catch (error) {
-			clearTimeout(timeout);
 			console.error('Failed to fetch Mermaid code:', error);
 			throw error;
+		} finally {
+			clearTimeout(timeout);
 		}
 	}
 

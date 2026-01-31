@@ -1,6 +1,6 @@
 import { ModernMermaidSettings } from '../types';
 import { PanZoomHandler } from './pan-zoom-handler';
-import { createControlButton } from './controls/button-helper';
+import { createControlButton, CleanupFunction } from './controls/button-helper';
 
 const COPY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
 const SUCCESS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
@@ -8,11 +8,20 @@ const ERROR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="1
 
 export class MermaidRenderer {
 	private static panZoomHandlers = new WeakMap<HTMLElement, PanZoomHandler>();
+	private static activeHandlers = new Set<PanZoomHandler>();
 	private timeoutIds = new Set<number>();
+	private zoomControlsCleanup: CleanupFunction | null = null;
 	constructor(
 		private mermaid: any,
 		private settings: ModernMermaidSettings
 	) {}
+
+	static cleanupAllHandlers(): void {
+		for (const handler of MermaidRenderer.activeHandlers) {
+			handler.destroy();
+		}
+		MermaidRenderer.activeHandlers.clear();
+	}
 
 	async render(source: string, el: HTMLElement, theme: string, backgroundColor: string): Promise<void> {
 		const { width, source: actualSource } = this.parseWidth(source);
@@ -42,6 +51,10 @@ export class MermaidRenderer {
 	}
 
 	private renderWithPanZoom(svg: string, el: HTMLElement): void {
+		if (this.zoomControlsCleanup) {
+			this.zoomControlsCleanup();
+		}
+
 		const wrapper = document.createElement('div');
 		wrapper.innerHTML = svg;
 		wrapper.style.cursor = 'grab';
@@ -70,11 +83,13 @@ export class MermaidRenderer {
 		const existingHandler = MermaidRenderer.panZoomHandlers.get(wrapper);
 		if (existingHandler) {
 			existingHandler.destroy();
+			MermaidRenderer.activeHandlers.delete(existingHandler);
 		}
 
 		const panZoomHandler = new PanZoomHandler(wrapper, svgElement, this.settings);
 		panZoomHandler.setup();
 		MermaidRenderer.panZoomHandlers.set(wrapper, panZoomHandler);
+		MermaidRenderer.activeHandlers.add(panZoomHandler);
 
 		this.addZoomControls(panZoomHandler, el);
 	}
@@ -98,22 +113,32 @@ export class MermaidRenderer {
 		controlsDiv.style.gap = '4px';
 		controlsDiv.style.zIndex = '10';
 
-		createControlButton(controlsDiv, {
+		const cleanups: Array<CleanupFunction> = [];
+
+		const { button: btn1, cleanup: cleanup1 } = createControlButton(controlsDiv, {
 			icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m8 11 2 2"/><path d="m11 8 2 2"/><path d="m14 11 2 2"/><path d="m11 14 2 2"/><path d="m8 11-2-2"/><path d="m11 8-2-2"/><path d="m14 11-2-2"/><path d="m11 14-2-2"/></svg>`,
 			onClick: () => panZoomHandler.zoomOut()
 		});
+		cleanups.push(cleanup1);
 
-		createControlButton(controlsDiv, {
+		const { button: btn2, cleanup: cleanup2 } = createControlButton(controlsDiv, {
 			icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m9 9 3 3"/><path d="m9 12 3 3"/><path d="m12 9 3 3"/><path d="m12 12 3 3"/></svg>`,
 			onClick: () => panZoomHandler.zoomIn()
 		});
+		cleanups.push(cleanup2);
 
-		createControlButton(controlsDiv, {
+		const { button: btn3, cleanup: cleanup3 } = createControlButton(controlsDiv, {
 			icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 17h6"/><path d="M12 21h6"/><path d="M12 7h6"/></svg>`,
 			onClick: () => panZoomHandler.reset()
-	});
+		});
+		cleanups.push(cleanup3);
 
 		el.appendChild(controlsDiv);
+
+		this.zoomControlsCleanup = () => {
+			cleanups.forEach(cleanup => cleanup());
+			controlsDiv.remove();
+		};
 	}
 
 	private applyStyles(el: HTMLElement, backgroundColor: string, width: number | null): void {
@@ -175,6 +200,12 @@ export class MermaidRenderer {
 			const canvas = document.createElement('canvas');
 			const img = new Image();
 
+			const cleanup = () => {
+				img.onload = null;
+				img.onerror = null;
+				img.src = '';
+			};
+
 			img.onload = () => {
 				try {
 					const bbox = svgElement.getBoundingClientRect();
@@ -183,6 +214,7 @@ export class MermaidRenderer {
 
 					const ctx = canvas.getContext('2d');
 					if (!ctx) {
+						cleanup();
 						throw new Error('Canvas context is null');
 					}
 
@@ -193,6 +225,7 @@ export class MermaidRenderer {
 					ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
 					canvas.toBlob((blob) => {
+						cleanup();
 						if (blob) {
 							resolve(blob);
 						} else {
@@ -200,11 +233,13 @@ export class MermaidRenderer {
 						}
 					}, 'image/png');
 				} catch (drawErr) {
+					cleanup();
 					reject(drawErr);
 				}
 			};
 
 			img.onerror = () => {
+				cleanup();
 				reject(new Error('Image load failed'));
 			};
 
@@ -269,19 +304,26 @@ export class MermaidRenderer {
 	}
 
 	private setupCopyButtonEvents(button: HTMLButtonElement, el: HTMLElement, backgroundColor: string): void {
-		button.addEventListener('mouseenter', () => {
+		const mouseEnterHandler = () => {
 			button.style.backgroundColor = 'rgba(128, 128, 128, 0.2)';
 			button.style.opacity = '1';
-		});
+		};
 
-		button.addEventListener('mouseleave', () => {
+		const mouseLeaveHandler = () => {
 			button.style.backgroundColor = 'rgba(128, 128, 128, 0.1)';
 			button.style.opacity = '0.7';
-		});
+		};
 
-		button.addEventListener('click', async () => {
+		const clickHandler = async () => {
+			if (!document.contains(button)) {
+				return;
+			}
 			await this.handleCopyClick(el, button, backgroundColor);
-		});
+		};
+
+		button.addEventListener('mouseenter', mouseEnterHandler);
+		button.addEventListener('mouseleave', mouseLeaveHandler);
+		button.addEventListener('click', clickHandler);
 	}
 
 	private addCopyButton(el: HTMLElement, backgroundColor: string): void {
@@ -295,5 +337,10 @@ export class MermaidRenderer {
 			clearTimeout(timeoutId);
 		}
 		this.timeoutIds.clear();
+
+		if (this.zoomControlsCleanup) {
+			this.zoomControlsCleanup();
+			this.zoomControlsCleanup = null;
+		}
 	}
 }

@@ -23,29 +23,45 @@ export interface ButtonOptions {
 	onClickLabel?: string;
 }
 
+export interface CleanupFunction {
+	(): void;
+}
+
 export function createControlButton(
 	container: HTMLElement,
 	options: ButtonOptions
-): HTMLButtonElement {
+): { button: HTMLButtonElement; cleanup: CleanupFunction } {
 	const btn = document.createElement('button');
 	btn.innerHTML = options.icon;
-	
-	Object.assign(btn.style, BUTTON_STYLES.button);
-	btn.addEventListener('mouseenter', () => {
+
+	const mouseEnterHandler = () => {
 		Object.assign(btn.style, BUTTON_STYLES.hover);
-	});
-	
-	btn.addEventListener('mouseleave', () => {
+	};
+
+	const mouseLeaveHandler = () => {
 		Object.assign(btn.style, BUTTON_STYLES.button);
-	});
-	
-	btn.addEventListener('click', () => {
+	};
+
+	const clickHandler = () => {
 		if (options.onClickLabel) {
 			console.log(options.onClickLabel);
 		}
 		options.onClick();
-	});
-	
+	};
+
+	Object.assign(btn.style, BUTTON_STYLES.button);
+	btn.addEventListener('mouseenter', mouseEnterHandler);
+	btn.addEventListener('mouseleave', mouseLeaveHandler);
+	btn.addEventListener('click', clickHandler);
+
 	container.appendChild(btn);
-	return btn;
+
+	const cleanup = () => {
+		btn.removeEventListener('mouseenter', mouseEnterHandler);
+		btn.removeEventListener('mouseleave', mouseLeaveHandler);
+		btn.removeEventListener('click', clickHandler);
+		btn.remove();
+	};
+
+	return { button: btn, cleanup };
 }

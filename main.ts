@@ -89,6 +89,7 @@ export default class ModernMermaidPlugin extends Plugin {
 			window.removeEventListener('unhandledrejection', this.unhandledRejectionHandler);
 			this.unhandledRejectionHandler = null;
 		}
+		MermaidRenderer.cleanupAllHandlers();
 		this.mermaidLoader.cleanup();
 		this.clearCache();
 	}
