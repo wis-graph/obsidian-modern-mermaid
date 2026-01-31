@@ -35,7 +35,8 @@ export default class ModernMermaidPlugin extends Plugin {
 		try {
 			const { width, source: actualSource } = this.parseWidth(source);
 			const id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
-			mermaid.initialize({ startOnLoad: false, theme: theme as any });
+			const themeConfig = theme === 'dark' ? 'dark' : 'default';
+			mermaid.initialize({ startOnLoad: false, theme: themeConfig });
 			const { svg } = await mermaid.render(id, actualSource);
 			el.innerHTML = svg;
 			el.style.backgroundColor = backgroundColor;
