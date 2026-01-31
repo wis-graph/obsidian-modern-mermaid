@@ -4,10 +4,10 @@ Render latest Mermaid diagrams with support for light/dark themes and image copy
 
 ## Mermaid Version Support
 
-| Platform | Mermaid Version |
-|----------|----------------|
-| Obsidian Official Build | v11.4.1 |
-| This Plugin | **Always Latest** ✨ |
+| Platform | Mermaid Version | Checked |
+|----------|----------------|----------|
+| Obsidian Official Build (v26.2.1) | v11.4.1 | 2026-02-01 |
+| This Plugin | **Always Latest** ✨ | - |
 
 This plugin automatically fetches and uses the latest Mermaid version, giving you access to newest features and syntax!
 
