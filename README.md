@@ -28,15 +28,20 @@ graph LR
 
 ### Custom Width
 
-You can set a custom width for the diagram by adding the width as the first line:
+You can control the diagram size by adding the width (in pixels) on the first line of the code block:
 
-```mer
+**Code:**
+````mer
 300
 graph TD
-    A[Start] --> B[End]
-```
+    A[Small] --> B[Diagram]
+    B --> C[300px wide]
+````
 
-This will render the diagram with a width of 300px.
+**Result:**
+![Custom Width Example](./modern-mermaid-width.png)
+
+If you don't specify a width, the diagram will fill the available space in your note.
 
 ## Screenshots
 
