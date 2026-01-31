@@ -36,6 +36,8 @@ Major update with CDN-based dynamic loading:
   - \`\`\`merlight\`\`\` - Light theme with white background
   - \`\`\`merdark\`\`\` - Dark theme with black background
 - Click to copy diagrams as PNG to clipboard
+- **Pan & Zoom**: Mouse wheel to zoom, drag to pan (configurable in settings)
+- Zoom controls: Zoom in/out and reset buttons
 - Centered layout
 - Ghost-style Lucide icons
 - Custom width support (add width in pixels on first line of code block)
