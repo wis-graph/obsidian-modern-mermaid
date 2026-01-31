@@ -17,6 +17,7 @@ export default class ModernMermaidPlugin extends Plugin {
 	private mermaidLoaded = false;
 	private mermaidLoading = false;
 	private mermaidLoadPromise: Promise<void> | null = null;
+	private pluginMermaidInstance: any = null;
 	settings: ModernMermaidSettings = DEFAULT_SETTINGS;
 
 	async onload() {
@@ -228,10 +229,9 @@ export default class ModernMermaidPlugin extends Plugin {
 			const timeout = setTimeout(() => {
 				console.warn('Mermaid load timeout, checking if available anyway...');
 				URL.revokeObjectURL(url);
-				const mermaid = (window as any).mermaid;
-				if (mermaid) {
+				if (this.pluginMermaidInstance) {
 					try {
-						mermaid.initialize({ startOnLoad: false });
+						this.pluginMermaidInstance.initialize({ startOnLoad: false });
 						resolve();
 					} catch (e) {
 						reject(new Error('Mermaid initialization failed'));
@@ -245,9 +245,11 @@ export default class ModernMermaidPlugin extends Plugin {
 				console.log('Mermaid script loaded, checking for mermaid object...');
 				clearTimeout(timeout);
 				URL.revokeObjectURL(url);
+				
 				const mermaid = (window as any).mermaid;
 				if (mermaid) {
 					console.log('Mermaid object found, initializing...');
+					this.pluginMermaidInstance = mermaid;
 					try {
 						mermaid.initialize({ startOnLoad: false });
 						console.log('Mermaid initialized successfully');
@@ -300,15 +302,15 @@ export default class ModernMermaidPlugin extends Plugin {
 	async renderMermaid(source: string, el: HTMLElement, theme: string, backgroundColor: string) {
 		await this.initializeMermaid();
 		
+		const mermaid = this.pluginMermaidInstance;
+		if (!mermaid) {
+			throw new Error('Mermaid not available');
+		}
+		
 		try {
 			const { width, source: actualSource } = this.parseWidth(source);
 			const id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
 			const themeConfig = theme === 'dark' ? 'dark' : 'default';
-			
-			const mermaid = (window as any).mermaid;
-			if (!mermaid) {
-				throw new Error('Mermaid not available');
-			}
 			
 			mermaid.initialize({ startOnLoad: false, theme: themeConfig });
 			

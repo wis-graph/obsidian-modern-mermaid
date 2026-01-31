@@ -37,6 +37,7 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
     this.mermaidLoaded = false;
     this.mermaidLoading = false;
     this.mermaidLoadPromise = null;
+    this.pluginMermaidInstance = null;
     this.settings = DEFAULT_SETTINGS;
   }
   async onload() {
@@ -222,10 +223,9 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
       const timeout = setTimeout(() => {
         console.warn("Mermaid load timeout, checking if available anyway...");
         URL.revokeObjectURL(url);
-        const mermaid = window.mermaid;
-        if (mermaid) {
+        if (this.pluginMermaidInstance) {
           try {
-            mermaid.initialize({ startOnLoad: false });
+            this.pluginMermaidInstance.initialize({ startOnLoad: false });
             resolve();
           } catch (e) {
             reject(new Error("Mermaid initialization failed"));
@@ -241,6 +241,7 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
         const mermaid = window.mermaid;
         if (mermaid) {
           console.log("Mermaid object found, initializing...");
+          this.pluginMermaidInstance = mermaid;
           try {
             mermaid.initialize({ startOnLoad: false });
             console.log("Mermaid initialized successfully");
@@ -284,14 +285,14 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
   }
   async renderMermaid(source, el, theme, backgroundColor) {
     await this.initializeMermaid();
+    const mermaid = this.pluginMermaidInstance;
+    if (!mermaid) {
+      throw new Error("Mermaid not available");
+    }
     try {
       const { width, source: actualSource } = this.parseWidth(source);
       const id = "mermaid-" + Math.random().toString(36).substr(2, 9);
       const themeConfig = theme === "dark" ? "dark" : "default";
-      const mermaid = window.mermaid;
-      if (!mermaid) {
-        throw new Error("Mermaid not available");
-      }
       mermaid.initialize({ startOnLoad: false, theme: themeConfig });
       let svg;
       try {
