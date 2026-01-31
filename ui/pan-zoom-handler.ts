@@ -88,9 +88,13 @@ export class PanZoomHandler {
 			return;
 		}
 
-		const rect = this.wrapper.getBoundingClientRect();
-		const mouseX = e.clientX - rect.left;
-		const mouseY = e.clientY - rect.top;
+		if (!this.svgElement) {
+			return;
+		}
+
+		const svgRect = this.svgElement.getBoundingClientRect();
+		const mouseX = e.clientX - svgRect.left;
+		const mouseY = e.clientY - svgRect.top;
 
 		const mouseXInSVG = (mouseX - this.state.translateX) / currentScale;
 		const mouseYInSVG = (mouseY - this.state.translateY) / currentScale;
@@ -117,9 +121,13 @@ export class PanZoomHandler {
 			return;
 		}
 
-		const rect = this.wrapper.getBoundingClientRect();
-		const mouseX = e.clientX - rect.left;
-		const mouseY = e.clientY - rect.top;
+		if (!this.svgElement) {
+			return;
+		}
+
+		const svgRect = this.svgElement.getBoundingClientRect();
+		const mouseX = e.clientX - svgRect.left;
+		const mouseY = e.clientY - svgRect.top;
 
 		const mouseXInSVG = (mouseX - this.state.translateX) / currentScale;
 		const mouseYInSVG = (mouseY - this.state.translateY) / currentScale;
