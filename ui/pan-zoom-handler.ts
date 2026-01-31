@@ -35,18 +35,12 @@ export class PanZoomHandler {
 
 	setup(): void {
 		this.wrapper.addEventListener('mousedown', this.handleMouseDown);
-		this.wrapper.addEventListener('mouseleave', this.handleMouseLeave);
-		this.wrapper.addEventListener('mouseup', this.handleMouseUp);
-		this.wrapper.addEventListener('mousemove', this.handleMouseMove);
 		this.wrapper.addEventListener('wheel', this.handleWheel);
 		this.wrapper.addEventListener('dblclick', this.handleDoubleClick);
 	}
 
 	destroy(): void {
 		this.wrapper.removeEventListener('mousedown', this.handleMouseDown);
-		this.wrapper.removeEventListener('mouseleave', this.handleMouseLeave);
-		this.wrapper.removeEventListener('mouseup', this.handleMouseUp);
-		this.wrapper.removeEventListener('mousemove', this.handleMouseMove);
 		this.wrapper.removeEventListener('wheel', this.handleWheel);
 		this.wrapper.removeEventListener('dblclick', this.handleDoubleClick);
 	}
@@ -57,19 +51,18 @@ export class PanZoomHandler {
 		this.state.startY = e.clientY - this.state.translateY;
 		this.state.panning = true;
 		this.wrapper.style.cursor = 'grabbing';
+		window.addEventListener('mousemove', this.handleWindowMouseMove);
+		window.addEventListener('mouseup', this.handleWindowMouseUp);
 	};
 
-	private handleMouseLeave = () => {
+	private handleWindowMouseUp = () => {
 		this.state.panning = false;
 		this.wrapper.style.cursor = 'grab';
+		window.removeEventListener('mousemove', this.handleWindowMouseMove);
+		window.removeEventListener('mouseup', this.handleWindowMouseUp);
 	};
 
-	private handleMouseUp = () => {
-		this.state.panning = false;
-		this.wrapper.style.cursor = 'grab';
-	};
-
-	private handleMouseMove = (e: MouseEvent) => {
+	private handleWindowMouseMove = (e: MouseEvent) => {
 		if (!this.state.panning) return;
 		e.preventDefault();
 		this.state.translateX = e.clientX - this.state.startX;
@@ -92,9 +85,9 @@ export class PanZoomHandler {
 			return;
 		}
 
-		const svgRect = this.svgElement.getBoundingClientRect();
-		const mouseX = e.clientX - svgRect.left;
-		const mouseY = e.clientY - svgRect.top;
+		const wrapperRect = this.wrapper.getBoundingClientRect();
+		const mouseX = e.clientX - wrapperRect.left;
+		const mouseY = e.clientY - wrapperRect.top;
 
 		const mouseXInSVG = (mouseX - this.state.translateX) / currentScale;
 		const mouseYInSVG = (mouseY - this.state.translateY) / currentScale;

@@ -7,6 +7,7 @@ const SUCCESS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
 const ERROR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
 export class MermaidRenderer {
+	private static panZoomHandlers = new WeakMap<HTMLElement, PanZoomHandler>();
 	constructor(
 		private mermaid: any,
 		private settings: ModernMermaidSettings
@@ -65,8 +66,14 @@ export class MermaidRenderer {
 			}
 		}
 
+		const existingHandler = MermaidRenderer.panZoomHandlers.get(wrapper);
+		if (existingHandler) {
+			existingHandler.destroy();
+		}
+
 		const panZoomHandler = new PanZoomHandler(wrapper, svgElement, this.settings);
 		panZoomHandler.setup();
+		MermaidRenderer.panZoomHandlers.set(wrapper, panZoomHandler);
 
 		this.addZoomControls(panZoomHandler, el);
 	}
