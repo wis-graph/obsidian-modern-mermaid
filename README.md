@@ -36,7 +36,8 @@ Major update with CDN-based dynamic loading:
   - \`\`\`merlight\`\`\` - Light theme with white background
   - \`\`\`merdark\`\`\` - Dark theme with black background
 - Click to copy diagrams as PNG to clipboard
-- **Pan & Zoom**: Mouse wheel to zoom, drag to pan (configurable in settings)
+- **Pan & Zoom**: Mouse wheel to zoom (smooth, slow), drag to pan
+- **Double-click to zoom**: Zoom to configured level (default: 2x), click again to reset
 - Zoom controls: Zoom in/out and reset buttons
 - Centered layout
 - Ghost-style Lucide icons
@@ -63,6 +64,8 @@ graph LR
 You can customize plugin behavior in Obsidian Settings → Modern Mermaid:
 
 - **Mermaid Version**: View currently loaded Mermaid library version
+- **Enable Pan & Zoom**: Enable mouse wheel zoom and drag-to-pan for diagrams
+- **Double Click Zoom Level**: Set zoom level when double-clicking (1.5x to 5x, default: 2x)
 - **Transparent Background for "mer"**: Enable/disable transparent background for `mer` code blocks
 - **Include Background in Copy**: Include background color when copying diagram as image
 - **Clear Cache**: Clear cached Mermaid library and force re-download
