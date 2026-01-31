@@ -1,6 +1,6 @@
 # Modern Mermaid
 
-Render latest Mermaid diagrams in Obsidian with support for light/dark themes and image copy functionality.
+Render latest Mermaid diagrams with support for light/dark themes and image copy functionality.
 
 ## Features
 

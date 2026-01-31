@@ -3,7 +3,7 @@
 	"name": "Modern Mermaid",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Render latest Mermaid diagrams in Obsidian.",
+	"description": "Render latest Mermaid diagrams.",
 	"author": "wis-graph",
 	"authorUrl": "https://github.com/wis-graph",
 	"isDesktopOnly": false
