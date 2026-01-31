@@ -30,15 +30,16 @@ Major update with CDN-based dynamic loading:
 
 ## Features
 
-- Render Mermaid diagrams with the latest syntax
+- Render Mermaid diagrams with latest syntax
 - Three code block types:
-  - \`\`\`mer\`\`\` - Default theme with white background
+  - \`\`\`mer\`\`\` - Transparent background (configurable in settings)
   - \`\`\`merlight\`\`\` - Light theme with white background
   - \`\`\`merdark\`\`\` - Dark theme with black background
-- Click the copy button to copy diagrams as PNG to clipboard
+- Click to copy diagrams as PNG to clipboard
 - Centered layout
 - Ghost-style Lucide icons
 - Custom width support (add width in pixels on first line of code block)
+- Transparent background option for seamless integration
 - **Auto-update to latest Mermaid version** on startup
 - **Fast loading** with CDN and caching
 - **Offline support** with cached version
@@ -54,6 +55,15 @@ graph TD
 graph LR
     A[Dark] --> B[Theme]
 ```
+
+### Settings
+
+You can customize plugin behavior in Obsidian Settings → Modern Mermaid:
+
+- **Mermaid Version**: View currently loaded Mermaid library version
+- **Transparent Background for "mer"**: Enable/disable transparent background for `mer` code blocks
+- **Include Background in Copy**: Include background color when copying diagram as image
+- **Clear Cache**: Clear cached Mermaid library and force re-download
 
 ### Custom Width
 
@@ -71,6 +81,31 @@ graph TD
 ![Custom Width Example](./modern-mermaid-width.png)
 
 If you don't specify a width, the diagram will fill the available space in your note.
+
+### Transparent Background
+
+The `mer` code block uses transparent background by default, making it perfect for integration with any theme or document style. You can configure this in plugin settings.
+
+**Code:**
+````mer
+200
+---
+title: Simple sample
+---
+stateDiagram-v2
+    [*] --> Still
+    Still --> [*]
+
+    Still --> Moving
+    Moving --> Still
+    Moving --> Crash
+    Crash --> [*]
+````
+
+**Result:**
+![Transparent Background Example](./modern-mermaid-transparent-bg.png)
+
+Note: The diagram has a transparent background, allowing it to blend seamlessly with any note background color.
 
 ## Screenshots
 
