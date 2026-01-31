@@ -107,6 +107,22 @@ stateDiagram-v2
 
 Note: The diagram has a transparent background, allowing it to blend seamlessly with any note background color.
 
+### Animation
+
+The latest Mermaid version supports animated diagrams! The plugin automatically uses the latest version, so you can create animated flowcharts and state diagrams.
+
+**Code:**
+````merlight
+flowchart LR
+    A e1@==> B
+    e1@{ animate: true }
+````
+
+**Result:**
+![Animation Example](./mermaid-animation.gif)
+
+Learn more about Mermaid animations: [Mermaid Documentation](https://mermaid.js.org/syntax/flowchart.html#animation)
+
 ## Screenshots
 
 ![Modern Mermaid Demo 1](./mermaid-demo-1.png)
