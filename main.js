@@ -29,7 +29,9 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 var import_obsidian = require("obsidian");
 var DEFAULT_SETTINGS = {
-  mermaidVersion: "Not loaded"
+  mermaidVersion: "Not loaded",
+  transparentMerBackground: true,
+  includeBackgroundInCopy: true
 };
 var ModernMermaidPlugin = class extends import_obsidian.Plugin {
   constructor() {
@@ -60,7 +62,8 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
     }
     this.registerMarkdownCodeBlockProcessor("mer", async (source, el) => {
       try {
-        await this.renderMermaid(source, el, "default", "#ffffff");
+        const backgroundColor = this.settings.transparentMerBackground ? "transparent" : "#ffffff";
+        await this.renderMermaid(source, el, "default", backgroundColor);
       } catch (error) {
         console.error("Mermaid code block processor error:", error);
       }
@@ -310,7 +313,9 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
         return;
       }
       el.innerHTML = svg;
-      el.style.backgroundColor = backgroundColor;
+      if (backgroundColor !== "transparent") {
+        el.style.backgroundColor = backgroundColor;
+      }
       el.style.padding = "20px";
       el.style.borderRadius = "8px";
       el.style.display = "flex";
@@ -365,8 +370,10 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
                 if (!ctx) {
                   throw new Error("Canvas context is null");
                 }
-                ctx.fillStyle = backgroundColor;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (this.settings.includeBackgroundInCopy && backgroundColor !== "transparent") {
+                  ctx.fillStyle = backgroundColor;
+                  ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 canvas.toBlob(async (blob) => {
                   if (blob) {
@@ -444,6 +451,14 @@ var ModernMermaidSettingTab = class extends import_obsidian.PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h2", { text: "Modern Mermaid Settings" });
     new import_obsidian.Setting(containerEl).setName("Mermaid Version").setDesc("Currently loaded Mermaid library version").addText((text) => text.setDisabled(true).setValue(this.plugin.settings.mermaidVersion));
+    new import_obsidian.Setting(containerEl).setName('Transparent Background for "mer"').setDesc('Use transparent background for "mer" code blocks. Disable to use white background.').addToggle((toggle) => toggle.setValue(this.plugin.settings.transparentMerBackground).onChange(async (value) => {
+      this.plugin.settings.transparentMerBackground = value;
+      await this.plugin.saveSettings();
+    }));
+    new import_obsidian.Setting(containerEl).setName("Include Background in Copy").setDesc("Include background color when copying as image. Disable to copy only the diagram.").addToggle((toggle) => toggle.setValue(this.plugin.settings.includeBackgroundInCopy).onChange(async (value) => {
+      this.plugin.settings.includeBackgroundInCopy = value;
+      await this.plugin.saveSettings();
+    }));
     new import_obsidian.Setting(containerEl).setName("Clear Cache").setDesc("Clear cached Mermaid library and force re-download").addButton((button) => button.setButtonText("Clear Cache").onClick(async () => {
       this.plugin.clearCache();
       this.plugin.settings.mermaidVersion = "Not loaded";

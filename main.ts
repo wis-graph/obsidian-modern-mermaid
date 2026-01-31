@@ -7,10 +7,14 @@ interface MermaidCache {
 
 interface ModernMermaidSettings {
 	mermaidVersion: string;
+	transparentMerBackground: boolean;
+	includeBackgroundInCopy: boolean;
 }
 
 const DEFAULT_SETTINGS: ModernMermaidSettings = {
-	mermaidVersion: 'Not loaded'
+	mermaidVersion: 'Not loaded',
+	transparentMerBackground: true,
+	includeBackgroundInCopy: true
 }
 
 export default class ModernMermaidPlugin extends Plugin {
@@ -44,7 +48,8 @@ export default class ModernMermaidPlugin extends Plugin {
 		
 		this.registerMarkdownCodeBlockProcessor('mer', async (source, el) => {
 			try {
-				await this.renderMermaid(source, el, 'default', '#ffffff');
+				const backgroundColor = this.settings.transparentMerBackground ? 'transparent' : '#ffffff';
+				await this.renderMermaid(source, el, 'default', backgroundColor);
 			} catch (error) {
 				console.error('Mermaid code block processor error:', error);
 			}
@@ -331,7 +336,9 @@ export default class ModernMermaidPlugin extends Plugin {
 			}
 			
 			el.innerHTML = svg;
-			el.style.backgroundColor = backgroundColor;
+			if (backgroundColor !== 'transparent') {
+				el.style.backgroundColor = backgroundColor;
+			}
 			el.style.padding = '20px';
 			el.style.borderRadius = '8px';
 			el.style.display = 'flex';
@@ -396,8 +403,10 @@ export default class ModernMermaidPlugin extends Plugin {
 									throw new Error('Canvas context is null');
 								}
 								
-								ctx.fillStyle = backgroundColor;
-								ctx.fillRect(0, 0, canvas.width, canvas.height);
+								if (this.settings.includeBackgroundInCopy && backgroundColor !== 'transparent') {
+									ctx.fillStyle = backgroundColor;
+									ctx.fillRect(0, 0, canvas.width, canvas.height);
+								}
 								ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 								
 								canvas.toBlob(async (blob) => {
@@ -492,6 +501,26 @@ class ModernMermaidSettingTab extends PluginSettingTab {
 			.addText(text => text
 				.setDisabled(true)
 				.setValue(this.plugin.settings.mermaidVersion));
+
+		new Setting(containerEl)
+			.setName('Transparent Background for "mer"')
+			.setDesc('Use transparent background for "mer" code blocks. Disable to use white background.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.transparentMerBackground)
+				.onChange(async (value) => {
+					this.plugin.settings.transparentMerBackground = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Include Background in Copy')
+			.setDesc('Include background color when copying as image. Disable to copy only the diagram.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.includeBackgroundInCopy)
+				.onChange(async (value) => {
+					this.plugin.settings.includeBackgroundInCopy = value;
+					await this.plugin.saveSettings();
+				}));
 
 		new Setting(containerEl)
 			.setName('Clear Cache')
