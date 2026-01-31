@@ -45,7 +45,7 @@ This document collects potential features and improvements for the Modern Mermai
 
 ## 8. Diagram Navigation
 
-- Pan/zoom functionality ✅ **IN PROGRESS**
+- Pan/zoom functionality ✅ **COMPLETED** (v2.1.0)
 - Mini-map
 - Quick search/highlighting
 
