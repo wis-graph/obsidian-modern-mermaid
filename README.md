@@ -7,9 +7,26 @@ Render latest Mermaid diagrams with support for light/dark themes and image copy
 | Platform | Mermaid Version |
 |----------|----------------|
 | Obsidian Official Build | v11.4.1 |
-| This Plugin | v11.12.2 (Latest) |
+| This Plugin | **Always Latest** ✨ |
 
-This plugin uses the latest Mermaid version, giving you access to the newest features and syntax!
+This plugin automatically fetches and uses the latest Mermaid version, giving you access to newest features and syntax!
+
+### Version 2.0.0 - Dynamic Loading System
+
+Major update with CDN-based dynamic loading:
+
+**New Features:**
+- 🚀 **Auto-update**: Automatically checks and loads latest Mermaid version on startup
+- ⚡ **Fast Loading**: Plugin size reduced from 5.9MB to 12KB with CDN loading
+- 💾 **Smart Caching**: Caches Mermaid version for instant loading
+- 🔔 **Notifications**: Shows update status via Obsidian notifications
+- 📡 **Offline Support**: Works offline with cached version
+
+**How it works:**
+1. On startup, checks npm registry for latest Mermaid version
+2. If new version available, fetches from CDN and caches it
+3. Shows notification when update completes
+4. Falls back to cached version if offline or CDN unavailable
 
 ## Features
 
@@ -22,6 +39,9 @@ This plugin uses the latest Mermaid version, giving you access to the newest fea
 - Centered layout
 - Ghost-style Lucide icons
 - Custom width support (add width in pixels on first line of code block)
+- **Auto-update to latest Mermaid version** on startup
+- **Fast loading** with CDN and caching
+- **Offline support** with cached version
 
 ## Usage
 

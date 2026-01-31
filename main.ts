@@ -1,9 +1,17 @@
-import { Plugin } from 'obsidian';
-import mermaid from 'mermaid';
+import { Plugin, Notice } from 'obsidian';
+
+interface MermaidCache {
+	version: string;
+	code: string;
+}
 
 export default class ModernMermaidPlugin extends Plugin {
+	private mermaidLoaded = false;
+	private mermaidLoading = false;
+	private mermaidLoadPromise: Promise<void> | null = null;
+
 	async onload() {
-		mermaid.initialize({ startOnLoad: false });
+		await this.initializeMermaid();
 		
 		this.registerMarkdownCodeBlockProcessor('mer', async (source, el) => {
 			await this.renderMermaid(source, el, 'default', '#ffffff');
@@ -15,6 +23,145 @@ export default class ModernMermaidPlugin extends Plugin {
 
 		this.registerMarkdownCodeBlockProcessor('merdark', async (source, el) => {
 			await this.renderMermaid(source, el, 'dark', '#000000');
+		});
+	}
+
+	async initializeMermaid() {
+		if (this.mermaidLoaded) {
+			return;
+		}
+
+		if (this.mermaidLoading) {
+			if (this.mermaidLoadPromise) {
+				await this.mermaidLoadPromise;
+			}
+			return;
+		}
+
+		this.mermaidLoading = true;
+		this.mermaidLoadPromise = this.loadMermaid();
+
+		try {
+			await this.mermaidLoadPromise;
+			this.mermaidLoaded = true;
+		} finally {
+			this.mermaidLoading = false;
+			this.mermaidLoadPromise = null;
+		}
+	}
+
+	async loadMermaid() {
+		const latestVersion = await this.getLatestVersion();
+		const cached = this.getCache();
+
+		if (cached && cached.version === latestVersion) {
+			await this.loadMermaidFromCode(cached.code, latestVersion);
+			return;
+		}
+
+		if (cached && cached.version !== latestVersion) {
+			try {
+				await this.fetchAndLoadLatest(latestVersion);
+			} catch (error) {
+				console.error('Failed to load latest version, using cache:', error);
+				await this.loadMermaidFromCode(cached.code, cached.version);
+				new Notice(`Mermaid 업데이트 실패, 버전 ${cached.version} 사용`);
+			}
+			return;
+		}
+
+		await this.fetchAndLoadLatest(latestVersion);
+	}
+
+	async getLatestVersion(): Promise<string> {
+		try {
+			const response = await fetch('https://registry.npmjs.org/mermaid/latest');
+			const data = await response.json();
+			return data.version;
+		} catch (error) {
+			console.error('Failed to fetch latest version:', error);
+			throw error;
+		}
+	}
+
+	getCache(): MermaidCache | null {
+		try {
+			const version = localStorage.getItem('modern-mermaid-cached-version');
+			const code = localStorage.getItem('modern-mermaid-cached-code');
+			
+			if (version && code) {
+				return { version, code };
+			}
+			
+			return null;
+		} catch (error) {
+			console.error('Failed to load cache:', error);
+			return null;
+		}
+	}
+
+	saveCache(version: string, code: string) {
+		try {
+			localStorage.setItem('modern-mermaid-cached-version', version);
+			localStorage.setItem('modern-mermaid-cached-code', code);
+		} catch (error) {
+			console.error('Failed to save cache:', error);
+		}
+	}
+
+	clearCache() {
+		try {
+			localStorage.removeItem('modern-mermaid-cached-version');
+			localStorage.removeItem('modern-mermaid-cached-code');
+		} catch (error) {
+			console.error('Failed to clear cache:', error);
+		}
+	}
+
+	async fetchAndLoadLatest(version: string) {
+		try {
+			const code = await this.fetchMermaidCode(version);
+			await this.loadMermaidFromCode(code, version);
+			this.saveCache(version, code);
+			new Notice(`Mermaid v${version} 업데이트 완료`);
+		} catch (error) {
+			console.error('Failed to fetch and load latest Mermaid:', error);
+			throw error;
+		}
+	}
+
+	async fetchMermaidCode(version: string): Promise<string> {
+		const url = `https://cdn.jsdelivr.net/npm/mermaid@${version}/dist/mermaid.min.js`;
+		
+		try {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			return await response.text();
+		} catch (error) {
+			console.error('Failed to fetch Mermaid code:', error);
+			throw error;
+		}
+	}
+
+	async loadMermaidFromCode(code: string, version: string): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const script = document.createElement('script');
+			script.textContent = code;
+			script.onload = () => {
+				const mermaid = (window as any).mermaid;
+				if (mermaid) {
+					mermaid.initialize({ startOnLoad: false });
+					resolve();
+				} else {
+					reject(new Error('Mermaid not loaded'));
+				}
+			};
+			script.onerror = () => {
+				reject(new Error('Failed to load Mermaid from code'));
+			};
+			document.head.appendChild(script);
 		});
 	}
 
@@ -32,10 +179,18 @@ export default class ModernMermaidPlugin extends Plugin {
 	}
 
 	async renderMermaid(source: string, el: HTMLElement, theme: string, backgroundColor: string) {
+		await this.initializeMermaid();
+		
 		try {
 			const { width, source: actualSource } = this.parseWidth(source);
 			const id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
 			const themeConfig = theme === 'dark' ? 'dark' : 'default';
+			
+			const mermaid = (window as any).mermaid;
+			if (!mermaid) {
+				throw new Error('Mermaid not available');
+			}
+			
 			mermaid.initialize({ startOnLoad: false, theme: themeConfig });
 			const { svg } = await mermaid.render(id, actualSource);
 			el.innerHTML = svg;
@@ -169,6 +324,6 @@ export default class ModernMermaidPlugin extends Plugin {
 	}
 
 	onunload() {
-		
+		this.clearCache();
 	}
 }
