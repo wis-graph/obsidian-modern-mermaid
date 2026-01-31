@@ -10,13 +10,15 @@ interface ModernMermaidSettings {
 	transparentMerBackground: boolean;
 	includeBackgroundInCopy: boolean;
 	enablePanZoom: boolean;
+	doubleClickZoomLevel: number;
 }
 
 const DEFAULT_SETTINGS: ModernMermaidSettings = {
 	mermaidVersion: 'Not loaded',
 	transparentMerBackground: true,
 	includeBackgroundInCopy: true,
-	enablePanZoom: true
+	enablePanZoom: true,
+	doubleClickZoomLevel: 2
 }
 
 export default class ModernMermaidPlugin extends Plugin {
@@ -401,7 +403,7 @@ export default class ModernMermaidPlugin extends Plugin {
 					const ys = (e.clientY - pointY) / scale;
 					const delta = -Math.sign(e.deltaY);
 					
-					const newScale = Math.min(Math.max(0.5, scale + delta * 0.1), 3);
+					const newScale = Math.min(Math.max(1, scale + delta * 0.03), 3);
 					
 					if (newScale !== scale) {
 						pointX = e.clientX - xs * newScale;
@@ -409,6 +411,18 @@ export default class ModernMermaidPlugin extends Plugin {
 						scale = newScale;
 						updateTransform();
 					}
+				});
+				
+				wrapper.addEventListener('dblclick', (e: MouseEvent) => {
+					e.preventDefault();
+					if (scale === 1) {
+						scale = this.settings.doubleClickZoomLevel;
+					} else {
+						scale = 1;
+						translateX = 0;
+						translateY = 0;
+					}
+					updateTransform();
 				});
 				
 				const updateTransform = () => {
@@ -659,6 +673,18 @@ class ModernMermaidSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.enablePanZoom)
 				.onChange(async (value) => {
 					this.plugin.settings.enablePanZoom = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Double Click Zoom Level')
+			.setDesc('Zoom level when double-clicking on diagram (1 = original size, 2 = 2x, 3 = 3x). Click again to reset.')
+			.addSlider(slider => slider
+				.setLimits(1.5, 5, 0.5)
+				.setValue(this.plugin.settings.doubleClickZoomLevel)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.doubleClickZoomLevel = value;
 					await this.plugin.saveSettings();
 				}));
 

@@ -32,7 +32,8 @@ var DEFAULT_SETTINGS = {
   mermaidVersion: "Not loaded",
   transparentMerBackground: true,
   includeBackgroundInCopy: true,
-  enablePanZoom: true
+  enablePanZoom: true,
+  doubleClickZoomLevel: 2
 };
 var ModernMermaidPlugin = class extends import_obsidian.Plugin {
   constructor() {
@@ -369,13 +370,24 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
           const xs = (e.clientX - pointX) / scale;
           const ys = (e.clientY - pointY) / scale;
           const delta = -Math.sign(e.deltaY);
-          const newScale = Math.min(Math.max(0.5, scale + delta * 0.1), 3);
+          const newScale = Math.min(Math.max(1, scale + delta * 0.03), 3);
           if (newScale !== scale) {
             pointX = e.clientX - xs * newScale;
             pointY = e.clientY - ys * newScale;
             scale = newScale;
             updateTransform();
           }
+        });
+        wrapper.addEventListener("dblclick", (e) => {
+          e.preventDefault();
+          if (scale === 1) {
+            scale = this.settings.doubleClickZoomLevel;
+          } else {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+          }
+          updateTransform();
         });
         const updateTransform = () => {
           if (svgElement) {
@@ -581,6 +593,10 @@ var ModernMermaidSettingTab = class extends import_obsidian.PluginSettingTab {
     new import_obsidian.Setting(containerEl).setName("Mermaid Version").setDesc("Currently loaded Mermaid library version").addText((text) => text.setDisabled(true).setValue(this.plugin.settings.mermaidVersion));
     new import_obsidian.Setting(containerEl).setName("Enable Pan & Zoom").setDesc("Enable mouse wheel zoom and drag-to-pan for diagrams.").addToggle((toggle) => toggle.setValue(this.plugin.settings.enablePanZoom).onChange(async (value) => {
       this.plugin.settings.enablePanZoom = value;
+      await this.plugin.saveSettings();
+    }));
+    new import_obsidian.Setting(containerEl).setName("Double Click Zoom Level").setDesc("Zoom level when double-clicking on diagram (1 = original size, 2 = 2x, 3 = 3x). Click again to reset.").addSlider((slider) => slider.setLimits(1.5, 5, 0.5).setValue(this.plugin.settings.doubleClickZoomLevel).setDynamicTooltip().onChange(async (value) => {
+      this.plugin.settings.doubleClickZoomLevel = value;
       await this.plugin.saveSettings();
     }));
     new import_obsidian.Setting(containerEl).setName('Transparent Background for "mer"').setDesc('Use transparent background for "mer" code blocks. Disable to use white background.').addToggle((toggle) => toggle.setValue(this.plugin.settings.transparentMerBackground).onChange(async (value) => {
