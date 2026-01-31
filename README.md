@@ -12,6 +12,7 @@ Render latest Mermaid diagrams with support for light/dark themes and image copy
 - Click the copy button to copy diagrams as PNG to clipboard
 - Centered layout
 - Ghost-style Lucide icons
+- Custom width support (add width in pixels on first line of code block)
 
 ## Usage
 
