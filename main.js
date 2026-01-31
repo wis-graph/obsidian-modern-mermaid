@@ -31,7 +31,8 @@ var import_obsidian = require("obsidian");
 var DEFAULT_SETTINGS = {
   mermaidVersion: "Not loaded",
   transparentMerBackground: true,
-  includeBackgroundInCopy: true
+  includeBackgroundInCopy: true,
+  enablePanZoom: true
 };
 var ModernMermaidPlugin = class extends import_obsidian.Plugin {
   constructor() {
@@ -312,7 +313,125 @@ var ModernMermaidPlugin = class extends import_obsidian.Plugin {
 				`;
         return;
       }
-      el.innerHTML = svg;
+      if (this.settings.enablePanZoom) {
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = svg;
+        wrapper.style.cursor = "grab";
+        wrapper.style.userSelect = "none";
+        el.innerHTML = "";
+        el.appendChild(wrapper);
+        let scale = 1;
+        let panning = false;
+        let pointX = 0;
+        let pointY = 0;
+        let startX = 0;
+        let startY = 0;
+        let translateX = 0;
+        let translateY = 0;
+        const svgElement = wrapper.querySelector("svg");
+        if (svgElement) {
+          svgElement.style.transition = "transform 0.1s ease-out";
+        }
+        wrapper.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          startX = e.clientX - translateX;
+          startY = e.clientY - translateY;
+          panning = true;
+          wrapper.style.cursor = "grabbing";
+        });
+        wrapper.addEventListener("mouseleave", () => {
+          panning = false;
+          wrapper.style.cursor = "grab";
+        });
+        wrapper.addEventListener("mouseup", () => {
+          panning = false;
+          wrapper.style.cursor = "grab";
+        });
+        wrapper.addEventListener("mousemove", (e) => {
+          if (!panning)
+            return;
+          e.preventDefault();
+          translateX = e.clientX - startX;
+          translateY = e.clientY - startY;
+          updateTransform();
+        });
+        wrapper.addEventListener("wheel", (e) => {
+          e.preventDefault();
+          const xs = (e.clientX - pointX) / scale;
+          const ys = (e.clientY - pointY) / scale;
+          const delta = -Math.sign(e.deltaY);
+          const newScale = Math.min(Math.max(0.5, scale + delta * 0.1), 3);
+          if (newScale !== scale) {
+            pointX = e.clientX - xs * newScale;
+            pointY = e.clientY - ys * newScale;
+            scale = newScale;
+            updateTransform();
+          }
+        });
+        const updateTransform = () => {
+          if (svgElement) {
+            svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+          }
+        };
+        const controlsDiv = document.createElement("div");
+        controlsDiv.style.position = "absolute";
+        controlsDiv.style.bottom = "8px";
+        controlsDiv.style.right = "8px";
+        controlsDiv.style.display = "flex";
+        controlsDiv.style.gap = "4px";
+        controlsDiv.style.zIndex = "10";
+        const createControlButton = (icon, onClick) => {
+          const btn = document.createElement("button");
+          btn.innerHTML = icon;
+          btn.style.padding = "6px";
+          btn.style.backgroundColor = "rgba(128, 128, 128, 0.1)";
+          btn.style.color = "currentColor";
+          btn.style.border = "none";
+          btn.style.borderRadius = "6px";
+          btn.style.cursor = "pointer";
+          btn.style.transition = "all 0.2s ease";
+          btn.style.opacity = "0.7";
+          btn.addEventListener("mouseenter", () => {
+            btn.style.backgroundColor = "rgba(128, 128, 128, 0.2)";
+            btn.style.opacity = "1";
+          });
+          btn.addEventListener("mouseleave", () => {
+            btn.style.backgroundColor = "rgba(128, 128, 128, 0.1)";
+            btn.style.opacity = "0.7";
+          });
+          btn.addEventListener("click", onClick);
+          return btn;
+        };
+        const zoomOutBtn = createControlButton(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m8 11 2 2"/><path d="m11 8 2 2"/><path d="m14 11 2 2"/><path d="m11 14 2 2"/><path d="m8 11-2-2"/><path d="m11 8-2-2"/><path d="m14 11-2-2"/><path d="m11 14-2-2"/></svg>`,
+          () => {
+            scale = Math.max(0.5, scale - 0.2);
+            updateTransform();
+          }
+        );
+        const zoomInBtn = createControlButton(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m9 9 3 3"/><path d="m9 12 3 3"/><path d="m12 9 3 3"/><path d="m12 12 3 3"/></svg>`,
+          () => {
+            scale = Math.min(3, scale + 0.2);
+            updateTransform();
+          }
+        );
+        const resetBtn = createControlButton(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 17h6"/><path d="M12 21h6"/><path d="M12 7h6"/></svg>`,
+          () => {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+          }
+        );
+        controlsDiv.appendChild(zoomOutBtn);
+        controlsDiv.appendChild(zoomInBtn);
+        controlsDiv.appendChild(resetBtn);
+        el.appendChild(controlsDiv);
+      } else {
+        el.innerHTML = svg;
+      }
       if (backgroundColor !== "transparent") {
         el.style.backgroundColor = backgroundColor;
       }
@@ -451,11 +570,15 @@ var ModernMermaidSettingTab = class extends import_obsidian.PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h2", { text: "Modern Mermaid Settings" });
     new import_obsidian.Setting(containerEl).setName("Mermaid Version").setDesc("Currently loaded Mermaid library version").addText((text) => text.setDisabled(true).setValue(this.plugin.settings.mermaidVersion));
+    new import_obsidian.Setting(containerEl).setName("Enable Pan & Zoom").setDesc("Enable mouse wheel zoom and drag-to-pan for diagrams.").addToggle((toggle) => toggle.setValue(this.plugin.settings.enablePanZoom).onChange(async (value) => {
+      this.plugin.settings.enablePanZoom = value;
+      await this.plugin.saveSettings();
+    }));
     new import_obsidian.Setting(containerEl).setName('Transparent Background for "mer"').setDesc('Use transparent background for "mer" code blocks. Disable to use white background.').addToggle((toggle) => toggle.setValue(this.plugin.settings.transparentMerBackground).onChange(async (value) => {
       this.plugin.settings.transparentMerBackground = value;
       await this.plugin.saveSettings();
     }));
-    new import_obsidian.Setting(containerEl).setName("Include Background in Copy").setDesc("Include background color when copying as image. Disable to copy only the diagram.").addToggle((toggle) => toggle.setValue(this.plugin.settings.includeBackgroundInCopy).onChange(async (value) => {
+    new import_obsidian.Setting(containerEl).setName("Include Background in Copy").setDesc("Include background color when copying as image. Disable to copy only diagram.").addToggle((toggle) => toggle.setValue(this.plugin.settings.includeBackgroundInCopy).onChange(async (value) => {
       this.plugin.settings.includeBackgroundInCopy = value;
       await this.plugin.saveSettings();
     }));
