@@ -96,6 +96,7 @@ export interface PanZoomState {
 
 		if (e.ctrlKey || e.metaKey) {
 			e.preventDefault();
+			e.stopPropagation();
 
 			const newScale = Math.min(Math.max(1, currentScale + delta * 0.05), 3);
 
@@ -122,13 +123,14 @@ export interface PanZoomState {
 			this.updateTransform();
 		} else if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
 			e.preventDefault();
+			e.stopPropagation();
 
 			if (!this.svgElement) {
 				return;
 			}
 
-			this.state.translateX += e.deltaX;
-			this.state.translateY += e.deltaY;
+			this.state.translateX -= e.deltaX;
+			this.state.translateY -= e.deltaY;
 
 			this.updateTransform();
 		}
