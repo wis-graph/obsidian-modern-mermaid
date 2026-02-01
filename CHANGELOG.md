@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.0] - 2025-02-01
+## [2.1.0] - 2026-02-01
 
 ### 🎯 Code Refactoring
 
@@ -76,7 +76,7 @@ Download `main.js`, `manifest.json`, and `styles.css` files and place them in yo
 
 ---
 
-## [2.0.0] - 2025-01-31
+## [2.0.0] - 2026-02-01
 
 ### 🚀 Dynamic Loading with Auto-Update
 
@@ -105,7 +105,7 @@ Download `main.js`, `manifest.json`, and `styles.css` files and place them in yo
 
 ---
 
-## [1.1.2] - 2025-01-31
+## [1.1.2] - 2026-02-01
 
 ### 🐛 Bug Fixes
 
@@ -115,7 +115,7 @@ Download `main.js`, `manifest.json`, and `styles.css` files and place them in yo
 
 ---
 
-## [1.1.1] - 2025-01-30
+## [1.1.1] - 2026-02-01
 
 ### 📚 Documentation
 
@@ -125,7 +125,7 @@ Download `main.js`, `manifest.json`, and `styles.css` files and place them in yo
 
 ---
 
-## [1.1.0] - 2025-01-29
+## [1.1.0] - 2026-02-01
 
 ### ✨ New Features
 
@@ -135,7 +135,7 @@ Download `main.js`, `manifest.json`, and `styles.css` files and place them in yo
 
 ---
 
-## [1.0.0] - 2025-01-28
+## [1.0.0] - 2026-01-31
 
 ### 🎉 Initial Release
 
