@@ -4,6 +4,20 @@ Render latest Mermaid diagrams with support for light/dark themes and image copy
 
 [**한국어 버전**](./README-KO.md) | English
 
+## Why This Plugin?
+
+Obsidian's built-in Mermaid renderer uses an older version (v11.4.1), which means you can't use the latest Mermaid features and syntax. This plugin always fetches and uses the **latest Mermaid version**, giving you access to:
+
+**Example: Latest Mermaid syntax with Obsidian vs. this plugin**
+
+Code with latest Mermaid syntax:
+![Mermaid code](./mermaid-demo-1.png)
+
+Obsidian's built-in Mermaid (v11.4.1) cannot render the latest syntax:
+![Obsidian Mermaid - Unable to render](./mermaid-demo-2.png)
+
+With this plugin (always latest version), the same diagram renders perfectly using the code above
+
 ## Mermaid Version Support
 
 | Platform | Mermaid Version | Checked |
@@ -141,27 +155,6 @@ flowchart LR
 ![Animation Example](./mermaid-animation.gif)
 
 Learn more about Mermaid animations: [Mermaid Documentation](https://mermaid.js.org/syntax/flowchart.html#animation)
-
-## Why This Plugin?
-
-Obsidian's built-in Mermaid renderer uses an older version (v11.4.1), which means you can't use the latest Mermaid features and syntax. This plugin always fetches and uses the **latest Mermaid version**, giving you access to:
-
-**Example: Latest Mermaid syntax with Obsidian vs. this plugin**
-
-Code with latest Mermaid syntax:
-![Mermaid code](./mermaid-demo-1.png)
-
-Obsidian's built-in Mermaid (v11.4.1) cannot render the latest syntax:
-![Obsidian Mermaid - Unable to render](./mermaid-demo-2.png)
-
-With this plugin (always latest version), the same diagram renders perfectly using the code above
-
-- Newest diagram types and syntax
-- Latest bug fixes and improvements
-- Animated diagrams and other modern features
-- Full compatibility with Mermaid documentation examples
-
-The plugin caches the Mermaid library for fast loading and works offline once cached.
 
 ## Credits
 
