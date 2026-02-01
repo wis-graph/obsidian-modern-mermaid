@@ -146,6 +146,14 @@ Learn more about Mermaid animations: [Mermaid Documentation](https://mermaid.js.
 
 Obsidian's built-in Mermaid renderer uses an older version (v11.4.1), which means you can't use the latest Mermaid features and syntax. This plugin always fetches and uses the **latest Mermaid version**, giving you access to:
 
+**Example: Latest Mermaid syntax with Obsidian vs. this plugin**
+
+Obsidian's built-in Mermaid (v11.4.1) cannot render the latest syntax:
+![Obsidian Mermaid - Unable to render](./mermaid-demo-2.png)
+
+With this plugin (always latest version), the same diagram renders perfectly:
+![Modern Mermaid - Renders perfectly](./mermaid-demo-1.png)
+
 - Newest diagram types and syntax
 - Latest bug fixes and improvements
 - Animated diagrams and other modern features

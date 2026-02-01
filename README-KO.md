@@ -144,6 +144,14 @@ Mermaid 애니메이션에 대해 자세히 알아보기: [Mermaid 문서](https
 
 Obsidian의 내장 Mermaid 렌더러는 오래된 버전(v11.4.1)을 사용하므로 최신 Mermaid 기능과 구문을 사용할 수 없습니다. 이 플러그인은 항상 **최신 Mermaid 버전**을 가져와서 사용하므로 다음에 액세스할 수 있습니다:
 
+**예시: Obsidian과 이 플러그인의 최신 Mermaid 구문 비교**
+
+Obsidian의 내장 Mermaid (v11.4.1)는 최신 구문을 렌더링할 수 없습니다:
+![Obsidian Mermaid - 렌더링 불가](./mermaid-demo-2.png)
+
+이 플러그인(항상 최신 버전)을 사용하면 같은 다이어그램이 완벽하게 렌더링됩니다:
+![Modern Mermaid - 완벽한 렌더링](./mermaid-demo-1.png)
+
 - 최신 다이어그램 유형 및 구문
 - 최신 버그 수정 및 개선 사항
 - 애니메이션 다이어그램 및 기타 최신 기능
