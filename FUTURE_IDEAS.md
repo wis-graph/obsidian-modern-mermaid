@@ -2,6 +2,8 @@
 
 This document collects potential features and improvements for the Modern Mermaid plugin.
 
+[**한국어 버전**](./FUTURE_IDEAS-KO.md) | Korean
+
 ## 1. Export Options
 
 - Export diagrams as SVG, PDF formats
