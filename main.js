@@ -45,7 +45,9 @@ var DEFAULT_SETTINGS = {
   transparentMerBackground: true,
   includeBackgroundInCopy: true,
   enablePanZoom: true,
-  doubleClickZoomLevel: 2
+  doubleClickZoomLevel: 2,
+  panZoomLocked: true,
+  enableTouchpadPan: false
 };
 
 // services/settings-manager.ts
@@ -289,7 +291,7 @@ var MermaidLoader = class {
 
 // ui/pan-zoom-handler.ts
 var PanZoomHandler = class {
-  constructor(wrapper, svgElement, settings) {
+  constructor(wrapper, svgElement, settings, locked = true, enableTouchpadPan = false) {
     this.wrapper = wrapper;
     this.svgElement = svgElement;
     this.settings = settings;
@@ -304,7 +306,12 @@ var PanZoomHandler = class {
       pointY: 0
     };
     this.isPanningActive = false;
+    this.locked = true;
+    this.enableTouchpadPan = false;
     this.handleMouseDown = (e) => {
+      if (this.locked) {
+        return;
+      }
       e.preventDefault();
       this.state.startX = e.clientX - this.state.translateX;
       this.state.startY = e.clientY - this.state.translateY;
@@ -330,27 +337,43 @@ var PanZoomHandler = class {
       this.updateTransform();
     };
     this.handleWheel = (e) => {
-      e.preventDefault();
+      if (this.locked) {
+        return;
+      }
       const delta = -Math.sign(e.deltaY);
       const currentScale = this.state.scale;
-      const newScale = Math.min(Math.max(1, currentScale + delta * 0.05), 3);
-      if (newScale === currentScale) {
-        return;
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const newScale = Math.min(Math.max(1, currentScale + delta * 0.05), 3);
+        if (newScale === currentScale) {
+          return;
+        }
+        if (!this.svgElement) {
+          return;
+        }
+        const wrapperRect = this.wrapper.getBoundingClientRect();
+        const mouseX = e.clientX - wrapperRect.left;
+        const mouseY = e.clientY - wrapperRect.top;
+        const mouseXInSVG = (mouseX - this.state.translateX) / currentScale;
+        const mouseYInSVG = (mouseY - this.state.translateY) / currentScale;
+        this.state.scale = newScale;
+        this.state.translateX = mouseX - mouseXInSVG * newScale;
+        this.state.translateY = mouseY - mouseYInSVG * newScale;
+        this.updateTransform();
+      } else if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
+        e.preventDefault();
+        if (!this.svgElement) {
+          return;
+        }
+        this.state.translateX += e.deltaX;
+        this.state.translateY += e.deltaY;
+        this.updateTransform();
       }
-      if (!this.svgElement) {
-        return;
-      }
-      const wrapperRect = this.wrapper.getBoundingClientRect();
-      const mouseX = e.clientX - wrapperRect.left;
-      const mouseY = e.clientY - wrapperRect.top;
-      const mouseXInSVG = (mouseX - this.state.translateX) / currentScale;
-      const mouseYInSVG = (mouseY - this.state.translateY) / currentScale;
-      this.state.scale = newScale;
-      this.state.translateX = mouseX - mouseXInSVG * newScale;
-      this.state.translateY = mouseY - mouseYInSVG * newScale;
-      this.updateTransform();
     };
     this.handleDoubleClick = (e) => {
+      if (this.locked) {
+        return;
+      }
       e.preventDefault();
       const currentScale = this.state.scale;
       const targetScale = currentScale === 1 ? this.settings.doubleClickZoomLevel : 1;
@@ -374,6 +397,8 @@ var PanZoomHandler = class {
       this.state.translateY = mouseY - mouseYInSVG * targetScale;
       this.updateTransform(true);
     };
+    this.locked = locked;
+    this.enableTouchpadPan = enableTouchpadPan;
     if (this.svgElement) {
       this.svgElement.style.transformOrigin = "0 0";
     }
@@ -415,6 +440,9 @@ var PanZoomHandler = class {
   getState() {
     return { ...this.state };
   }
+  setLocked(locked) {
+    this.locked = locked;
+  }
 };
 
 // ui/controls/button-helper.ts
@@ -441,7 +469,12 @@ function createControlButton(container, options) {
     Object.assign(btn.style, BUTTON_STYLES.hover);
   };
   const mouseLeaveHandler = () => {
-    Object.assign(btn.style, BUTTON_STYLES.button);
+    if (options.isActive) {
+      btn.style.backgroundColor = "rgba(59, 130, 246, 0.2)";
+      btn.style.opacity = "1";
+    } else {
+      Object.assign(btn.style, BUTTON_STYLES.button);
+    }
   };
   const clickHandler = () => {
     if (options.onClickLabel) {
@@ -450,6 +483,10 @@ function createControlButton(container, options) {
     options.onClick();
   };
   Object.assign(btn.style, BUTTON_STYLES.button);
+  if (options.isActive) {
+    btn.style.backgroundColor = "rgba(59, 130, 246, 0.2)";
+    btn.style.opacity = "1";
+  }
   btn.addEventListener("mouseenter", mouseEnterHandler);
   btn.addEventListener("mouseleave", mouseLeaveHandler);
   btn.addEventListener("click", clickHandler);
@@ -467,12 +504,17 @@ function createControlButton(container, options) {
 var COPY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
 var SUCCESS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 var ERROR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+var LOCK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+var UNLOCK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
 var _MermaidRenderer = class {
   constructor(mermaid, settings) {
     this.mermaid = mermaid;
     this.settings = settings;
     this.timeoutIds = /* @__PURE__ */ new Set();
     this.zoomControlsCleanup = null;
+    this.locked = true;
+    this.lockButton = null;
+    this.currentWrapper = null;
   }
   static cleanupAllHandlers() {
     for (const handler of _MermaidRenderer.activeHandlers) {
@@ -508,12 +550,13 @@ var _MermaidRenderer = class {
     }
     const wrapper = document.createElement("div");
     wrapper.innerHTML = svg;
-    wrapper.style.cursor = "grab";
-    wrapper.style.userSelect = "none";
+    wrapper.style.cursor = this.locked ? "default" : "grab";
+    wrapper.style.userSelect = this.locked ? "text" : "none";
     wrapper.style.display = "inline-block";
     wrapper.style.textAlign = "center";
     el.innerHTML = "";
     el.appendChild(wrapper);
+    this.currentWrapper = wrapper;
     const svgElement = wrapper.querySelector("svg");
     if (svgElement) {
       svgElement.style.transition = "transform 0.1s ease-out";
@@ -533,11 +576,13 @@ var _MermaidRenderer = class {
       existingHandler.destroy();
       _MermaidRenderer.activeHandlers.delete(existingHandler);
     }
-    const panZoomHandler = new PanZoomHandler(wrapper, svgElement, this.settings);
+    this.locked = this.settings.panZoomLocked;
+    const panZoomHandler = new PanZoomHandler(wrapper, svgElement, this.settings, this.locked, this.settings.enableTouchpadPan);
     panZoomHandler.setup();
     _MermaidRenderer.panZoomHandlers.set(wrapper, panZoomHandler);
     _MermaidRenderer.activeHandlers.add(panZoomHandler);
     this.addZoomControls(panZoomHandler, el);
+    this.addLockButton(panZoomHandler, el);
   }
   renderWithoutPanZoom(svg, el) {
     el.innerHTML = svg;
@@ -740,6 +785,55 @@ var _MermaidRenderer = class {
     this.setupCopyButtonEvents(button, el, backgroundColor);
     el.appendChild(button);
   }
+  addLockButton(panZoomHandler, el) {
+    const button = this.createLockButtonElement();
+    this.setupLockButtonEvents(button, panZoomHandler);
+    el.appendChild(button);
+  }
+  createLockButtonElement() {
+    const button = document.createElement("button");
+    button.innerHTML = this.locked ? LOCK_ICON : UNLOCK_ICON;
+    button.style.position = "absolute";
+    button.style.top = "8px";
+    button.style.right = "8px";
+    button.style.padding = "6px";
+    button.style.backgroundColor = "rgba(128, 128, 128, 0.1)";
+    button.style.color = this.locked ? "currentColor" : "#3b82f6";
+    button.style.border = "none";
+    button.style.borderRadius = "6px";
+    button.style.cursor = "pointer";
+    button.style.zIndex = "10";
+    button.style.transition = "all 0.2s ease";
+    button.style.opacity = this.locked ? "0.7" : "1";
+    button.title = this.locked ? "Pan & zoom locked (click to unlock)" : "Pan & zoom unlocked (click to lock)";
+    return button;
+  }
+  setupLockButtonEvents(button, panZoomHandler) {
+    const mouseEnterHandler = () => {
+      button.style.backgroundColor = "rgba(128, 128, 128, 0.2)";
+      button.style.opacity = "1";
+    };
+    const mouseLeaveHandler = () => {
+      button.style.backgroundColor = "rgba(128, 128, 128, 0.1)";
+      button.style.opacity = this.locked ? "0.7" : "1";
+    };
+    const clickHandler = () => {
+      this.locked = !this.locked;
+      button.innerHTML = this.locked ? LOCK_ICON : UNLOCK_ICON;
+      button.style.color = this.locked ? "currentColor" : "#3b82f6";
+      button.style.opacity = this.locked ? "0.7" : "1";
+      button.title = this.locked ? "Pan & zoom locked (click to unlock)" : "Pan & zoom unlocked (click to lock)";
+      if (this.currentWrapper) {
+        panZoomHandler.setLocked(this.locked);
+        this.currentWrapper.style.cursor = this.locked ? "default" : "grab";
+        this.currentWrapper.style.userSelect = this.locked ? "text" : "none";
+      }
+    };
+    button.addEventListener("mouseenter", mouseEnterHandler);
+    button.addEventListener("mouseleave", mouseLeaveHandler);
+    button.addEventListener("click", clickHandler);
+    this.lockButton = button;
+  }
   cleanup() {
     for (const timeoutId of this.timeoutIds) {
       clearTimeout(timeoutId);
@@ -748,6 +842,10 @@ var _MermaidRenderer = class {
     if (this.zoomControlsCleanup) {
       this.zoomControlsCleanup();
       this.zoomControlsCleanup = null;
+    }
+    if (this.lockButton) {
+      this.lockButton.remove();
+      this.lockButton = null;
     }
   }
 };
@@ -849,6 +947,14 @@ var ModernMermaidSettingTab = class extends import_obsidian.PluginSettingTab {
     }));
     new import_obsidian.Setting(containerEl).setName("Double Click Zoom Level").setDesc("Zoom level when double-clicking on diagram (1 = original size, 2 = 2x, 3 = 3x). Click again to reset.").addSlider((slider) => slider.setLimits(1.5, 5, 0.5).setValue(this.plugin.settings.doubleClickZoomLevel).setDynamicTooltip().onChange(async (value) => {
       this.plugin.settings.doubleClickZoomLevel = value;
+      await this.plugin.saveSettings();
+    }));
+    new import_obsidian.Setting(containerEl).setName("Pan & Zoom Locked by Default").setDesc("Pan & zoom is locked by default. Click the lock button on the diagram to enable it. When locked, mouse wheel scrolls the document normally.").addToggle((toggle) => toggle.setValue(this.plugin.settings.panZoomLocked).onChange(async (value) => {
+      this.plugin.settings.panZoomLocked = value;
+      await this.plugin.saveSettings();
+    }));
+    new import_obsidian.Setting(containerEl).setName("Enable Touchpad Pan").setDesc("Enable two-finger horizontal/diagonal scrolling on touchpads for panning (when unlocked). Vertical scrolling uses Ctrl/Cmd + wheel for zoom.").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableTouchpadPan).onChange(async (value) => {
+      this.plugin.settings.enableTouchpadPan = value;
       await this.plugin.saveSettings();
     }));
     new import_obsidian.Setting(containerEl).setName('Transparent Background for "mer"').setDesc('Use transparent background for "mer" code blocks. Disable to use white background.').addToggle((toggle) => toggle.setValue(this.plugin.settings.transparentMerBackground).onChange(async (value) => {

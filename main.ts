@@ -127,17 +127,37 @@ class ModernMermaidSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		new Setting(containerEl)
-			.setName('Double Click Zoom Level')
-			.setDesc('Zoom level when double-clicking on diagram (1 = original size, 2 = 2x, 3 = 3x). Click again to reset.')
-			.addSlider(slider => slider
-				.setLimits(1.5, 5, 0.5)
-				.setValue(this.plugin.settings.doubleClickZoomLevel)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					this.plugin.settings.doubleClickZoomLevel = value;
-					await this.plugin.saveSettings();
-				}));
+new Setting(containerEl)
+ 			.setName('Double Click Zoom Level')
+ 			.setDesc('Zoom level when double-clicking on diagram (1 = original size, 2 = 2x, 3 = 3x). Click again to reset.')
+ 			.addSlider(slider => slider
+ 				.setLimits(1.5, 5, 0.5)
+ 				.setValue(this.plugin.settings.doubleClickZoomLevel)
+ 				.setDynamicTooltip()
+ 				.onChange(async (value) => {
+ 					this.plugin.settings.doubleClickZoomLevel = value;
+ 					await this.plugin.saveSettings();
+ 				}));
+
+ 		new Setting(containerEl)
+ 			.setName('Pan & Zoom Locked by Default')
+ 			.setDesc('Pan & zoom is locked by default. Click the lock button on the diagram to enable it. When locked, mouse wheel scrolls the document normally.')
+ 			.addToggle(toggle => toggle
+ 				.setValue(this.plugin.settings.panZoomLocked)
+ 				.onChange(async (value) => {
+ 					this.plugin.settings.panZoomLocked = value;
+ 					await this.plugin.saveSettings();
+ 				}));
+
+ 		new Setting(containerEl)
+ 			.setName('Enable Touchpad Pan')
+ 			.setDesc('Enable two-finger horizontal/diagonal scrolling on touchpads for panning (when unlocked). Vertical scrolling uses Ctrl/Cmd + wheel for zoom.')
+ 			.addToggle(toggle => toggle
+ 				.setValue(this.plugin.settings.enableTouchpadPan)
+ 				.onChange(async (value) => {
+ 					this.plugin.settings.enableTouchpadPan = value;
+ 					await this.plugin.saveSettings();
+ 				}));
 
 		new Setting(containerEl)
 			.setName('Transparent Background for "mer"')

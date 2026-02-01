@@ -11,28 +11,34 @@ export interface PanZoomState {
 	pointY: number;
 }
 
-export class PanZoomHandler {
-	private state: PanZoomState = {
-		scale: 1,
-		translateX: 0,
-		translateY: 0,
-		panning: false,
-		startX: 0,
-		startY: 0,
-		pointX: 0,
-		pointY: 0
-	};
-	private isPanningActive: boolean = false;
+	export class PanZoomHandler {
+ 	private state: PanZoomState = {
+ 		scale: 1,
+ 		translateX: 0,
+ 		translateY: 0,
+ 		panning: false,
+ 		startX: 0,
+ 		startY: 0,
+ 		pointX: 0,
+ 		pointY: 0
+ 	};
+ 	private isPanningActive: boolean = false;
+ 	private locked: boolean = true;
+ 	private enableTouchpadPan: boolean = false;
 
-	constructor(
-		private wrapper: HTMLElement,
-		private svgElement: SVGElement | null,
-		private settings: ModernMermaidSettings
-	) {
-		if (this.svgElement) {
-			this.svgElement.style.transformOrigin = '0 0';
-		}
-	}
+ 	constructor(
+ 		private wrapper: HTMLElement,
+ 		private svgElement: SVGElement | null,
+ 		private settings: ModernMermaidSettings,
+ 		locked: boolean = true,
+ 		enableTouchpadPan: boolean = false
+ 	) {
+ 		this.locked = locked;
+ 		this.enableTouchpadPan = enableTouchpadPan;
+ 		if (this.svgElement) {
+ 			this.svgElement.style.transformOrigin = '0 0';
+ 		}
+ 	}
 
 	setup(): void {
 		this.wrapper.addEventListener('mousedown', this.handleMouseDown);
@@ -51,15 +57,18 @@ export class PanZoomHandler {
 	}
 
 	private handleMouseDown = (e: MouseEvent) => {
-		e.preventDefault();
-		this.state.startX = e.clientX - this.state.translateX;
-		this.state.startY = e.clientY - this.state.translateY;
-		this.state.panning = true;
-		this.isPanningActive = true;
-		this.wrapper.style.cursor = 'grabbing';
-		window.addEventListener('mousemove', this.handleWindowMouseMove);
-		window.addEventListener('mouseup', this.handleWindowMouseUp);
-	};
+ 		if (this.locked) {
+ 			return;
+ 		}
+ 		e.preventDefault();
+ 		this.state.startX = e.clientX - this.state.translateX;
+ 		this.state.startY = e.clientY - this.state.translateY;
+ 		this.state.panning = true;
+ 		this.isPanningActive = true;
+ 		this.wrapper.style.cursor = 'grabbing';
+ 		window.addEventListener('mousemove', this.handleWindowMouseMove);
+ 		window.addEventListener('mouseup', this.handleWindowMouseUp);
+ 	};
 
 	private handleWindowMouseUp = () => {
 		this.state.panning = false;
@@ -78,36 +87,58 @@ export class PanZoomHandler {
 	};
 
 	private handleWheel = (e: WheelEvent) => {
-		e.preventDefault();
+		if (this.locked) {
+			return;
+		}
 
 		const delta = -Math.sign(e.deltaY);
 		const currentScale = this.state.scale;
-		const newScale = Math.min(Math.max(1, currentScale + delta * 0.05), 3);
 
-		if (newScale === currentScale) {
-			return;
+		if (e.ctrlKey || e.metaKey) {
+			e.preventDefault();
+
+			const newScale = Math.min(Math.max(1, currentScale + delta * 0.05), 3);
+
+			if (newScale === currentScale) {
+				return;
+			}
+
+			if (!this.svgElement) {
+				return;
+			}
+
+			const wrapperRect = this.wrapper.getBoundingClientRect();
+			const mouseX = e.clientX - wrapperRect.left;
+			const mouseY = e.clientY - wrapperRect.top;
+
+			const mouseXInSVG = (mouseX - this.state.translateX) / currentScale;
+			const mouseYInSVG = (mouseY - this.state.translateY) / currentScale;
+
+			this.state.scale = newScale;
+
+			this.state.translateX = mouseX - mouseXInSVG * newScale;
+			this.state.translateY = mouseY - mouseYInSVG * newScale;
+
+			this.updateTransform();
+		} else if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
+			e.preventDefault();
+
+			if (!this.svgElement) {
+				return;
+			}
+
+			this.state.translateX += e.deltaX;
+			this.state.translateY += e.deltaY;
+
+			this.updateTransform();
 		}
-
-		if (!this.svgElement) {
-			return;
-		}
-
-		const wrapperRect = this.wrapper.getBoundingClientRect();
-		const mouseX = e.clientX - wrapperRect.left;
-		const mouseY = e.clientY - wrapperRect.top;
-
-		const mouseXInSVG = (mouseX - this.state.translateX) / currentScale;
-		const mouseYInSVG = (mouseY - this.state.translateY) / currentScale;
-
-		this.state.scale = newScale;
-
-		this.state.translateX = mouseX - mouseXInSVG * newScale;
-		this.state.translateY = mouseY - mouseYInSVG * newScale;
-
-		this.updateTransform();
 	};
 
 	private handleDoubleClick = (e: MouseEvent) => {
+		if (this.locked) {
+			return;
+		}
+
 		e.preventDefault();
 
 		const currentScale = this.state.scale;
@@ -166,5 +197,9 @@ export class PanZoomHandler {
 
 	getState(): PanZoomState {
 		return { ...this.state };
+	}
+
+	setLocked(locked: boolean): void {
+		this.locked = locked;
 	}
 }

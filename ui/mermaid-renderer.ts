@@ -5,12 +5,17 @@ import { createControlButton, CleanupFunction } from './controls/button-helper';
 const COPY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
 const SUCCESS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 const ERROR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+const LOCK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+const UNLOCK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
 
 export class MermaidRenderer {
-	private static panZoomHandlers = new WeakMap<HTMLElement, PanZoomHandler>();
-	private static activeHandlers = new Set<PanZoomHandler>();
-	private timeoutIds = new Set<number>();
-	private zoomControlsCleanup: CleanupFunction | null = null;
+ 	private static panZoomHandlers = new WeakMap<HTMLElement, PanZoomHandler>();
+ 	private static activeHandlers = new Set<PanZoomHandler>();
+ 	private timeoutIds = new Set<number>();
+ 	private zoomControlsCleanup: CleanupFunction | null = null;
+ 	private locked: boolean = true;
+ 	private lockButton: HTMLButtonElement | null = null;
+ 	private currentWrapper: HTMLElement | null = null;
 	constructor(
 		private mermaid: any,
 		private settings: ModernMermaidSettings
@@ -51,48 +56,52 @@ export class MermaidRenderer {
 	}
 
 	private renderWithPanZoom(svg: string, el: HTMLElement): void {
-		if (this.zoomControlsCleanup) {
-			this.zoomControlsCleanup();
-		}
+ 		if (this.zoomControlsCleanup) {
+ 			this.zoomControlsCleanup();
+ 		}
 
-		const wrapper = document.createElement('div');
-		wrapper.innerHTML = svg;
-		wrapper.style.cursor = 'grab';
-		wrapper.style.userSelect = 'none';
-		wrapper.style.display = 'inline-block';
-		wrapper.style.textAlign = 'center';
+ 		const wrapper = document.createElement('div');
+ 		wrapper.innerHTML = svg;
+ 		wrapper.style.cursor = this.locked ? 'default' : 'grab';
+ 		wrapper.style.userSelect = this.locked ? 'text' : 'none';
+ 		wrapper.style.display = 'inline-block';
+ 		wrapper.style.textAlign = 'center';
 
-		el.innerHTML = '';
-		el.appendChild(wrapper);
+ 		el.innerHTML = '';
+ 		el.appendChild(wrapper);
 
-		const svgElement = wrapper.querySelector('svg');
-		if (svgElement) {
-			svgElement.style.transition = 'transform 0.1s ease-out';
-			svgElement.style.display = 'block';
-			svgElement.style.margin = '0 auto';
-			const svgWidth = svgElement.getAttribute('width');
-			const svgHeight = svgElement.getAttribute('height');
-			if (svgWidth) {
-				wrapper.style.width = svgWidth;
-			}
-			if (svgHeight) {
-				wrapper.style.height = svgHeight;
-			}
-		}
+ 		this.currentWrapper = wrapper;
 
-		const existingHandler = MermaidRenderer.panZoomHandlers.get(wrapper);
-		if (existingHandler) {
-			existingHandler.destroy();
-			MermaidRenderer.activeHandlers.delete(existingHandler);
-		}
+ 		const svgElement = wrapper.querySelector('svg');
+ 		if (svgElement) {
+ 			svgElement.style.transition = 'transform 0.1s ease-out';
+ 			svgElement.style.display = 'block';
+ 			svgElement.style.margin = '0 auto';
+ 			const svgWidth = svgElement.getAttribute('width');
+ 			const svgHeight = svgElement.getAttribute('height');
+ 			if (svgWidth) {
+ 				wrapper.style.width = svgWidth;
+ 			}
+ 			if (svgHeight) {
+ 				wrapper.style.height = svgHeight;
+ 			}
+ 		}
 
-		const panZoomHandler = new PanZoomHandler(wrapper, svgElement, this.settings);
-		panZoomHandler.setup();
-		MermaidRenderer.panZoomHandlers.set(wrapper, panZoomHandler);
-		MermaidRenderer.activeHandlers.add(panZoomHandler);
+ 		const existingHandler = MermaidRenderer.panZoomHandlers.get(wrapper);
+ 		if (existingHandler) {
+ 			existingHandler.destroy();
+ 			MermaidRenderer.activeHandlers.delete(existingHandler);
+ 		}
 
-		this.addZoomControls(panZoomHandler, el);
-	}
+ 		this.locked = this.settings.panZoomLocked;
+ 		const panZoomHandler = new PanZoomHandler(wrapper, svgElement, this.settings, this.locked, this.settings.enableTouchpadPan);
+ 		panZoomHandler.setup();
+ 		MermaidRenderer.panZoomHandlers.set(wrapper, panZoomHandler);
+ 		MermaidRenderer.activeHandlers.add(panZoomHandler);
+
+ 		this.addZoomControls(panZoomHandler, el);
+ 		this.addLockButton(panZoomHandler, el);
+ 	}
 
 	private renderWithoutPanZoom(svg: string, el: HTMLElement): void {
 		el.innerHTML = svg;
@@ -327,20 +336,82 @@ export class MermaidRenderer {
 	}
 
 	private addCopyButton(el: HTMLElement, backgroundColor: string): void {
-		const button = this.createCopyButtonElement();
-		this.setupCopyButtonEvents(button, el, backgroundColor);
-		el.appendChild(button);
-	}
+ 		const button = this.createCopyButtonElement();
+ 		this.setupCopyButtonEvents(button, el, backgroundColor);
+ 		el.appendChild(button);
+ 	}
+
+ 	private addLockButton(panZoomHandler: PanZoomHandler, el: HTMLElement): void {
+ 		const button = this.createLockButtonElement();
+ 		this.setupLockButtonEvents(button, panZoomHandler);
+ 		el.appendChild(button);
+ 	}
+
+ 	private createLockButtonElement(): HTMLButtonElement {
+ 		const button = document.createElement('button');
+ 		button.innerHTML = this.locked ? LOCK_ICON : UNLOCK_ICON;
+ 		button.style.position = 'absolute';
+ 		button.style.top = '8px';
+ 		button.style.right = '8px';
+ 		button.style.padding = '6px';
+ 		button.style.backgroundColor = 'rgba(128, 128, 128, 0.1)';
+ 		button.style.color = this.locked ? 'currentColor' : '#3b82f6';
+ 		button.style.border = 'none';
+ 		button.style.borderRadius = '6px';
+ 		button.style.cursor = 'pointer';
+ 		button.style.zIndex = '10';
+ 		button.style.transition = 'all 0.2s ease';
+ 		button.style.opacity = this.locked ? '0.7' : '1';
+ 		button.title = this.locked ? 'Pan & zoom locked (click to unlock)' : 'Pan & zoom unlocked (click to lock)';
+ 		return button;
+ 	}
+
+ 	private setupLockButtonEvents(button: HTMLButtonElement, panZoomHandler: PanZoomHandler): void {
+ 		const mouseEnterHandler = () => {
+ 			button.style.backgroundColor = 'rgba(128, 128, 128, 0.2)';
+ 			button.style.opacity = '1';
+ 		};
+
+ 		const mouseLeaveHandler = () => {
+ 			button.style.backgroundColor = 'rgba(128, 128, 128, 0.1)';
+ 			button.style.opacity = this.locked ? '0.7' : '1';
+ 		};
+
+ 		const clickHandler = () => {
+ 			this.locked = !this.locked;
+ 			button.innerHTML = this.locked ? LOCK_ICON : UNLOCK_ICON;
+ 			button.style.color = this.locked ? 'currentColor' : '#3b82f6';
+ 			button.style.opacity = this.locked ? '0.7' : '1';
+ 			button.title = this.locked ? 'Pan & zoom locked (click to unlock)' : 'Pan & zoom unlocked (click to lock)';
+
+ 			if (this.currentWrapper) {
+ 				panZoomHandler.setLocked(this.locked);
+ 				this.currentWrapper.style.cursor = this.locked ? 'default' : 'grab';
+ 				this.currentWrapper.style.userSelect = this.locked ? 'text' : 'none';
+ 			}
+ 		};
+
+ 		button.addEventListener('mouseenter', mouseEnterHandler);
+ 		button.addEventListener('mouseleave', mouseLeaveHandler);
+ 		button.addEventListener('click', clickHandler);
+
+ 		this.lockButton = button;
+ 	}
 
 	cleanup(): void {
-		for (const timeoutId of this.timeoutIds) {
-			clearTimeout(timeoutId);
-		}
-		this.timeoutIds.clear();
+ 		for (const timeoutId of this.timeoutIds) {
+ 			clearTimeout(timeoutId);
+ 		}
+ 		this.timeoutIds.clear();
 
-		if (this.zoomControlsCleanup) {
-			this.zoomControlsCleanup();
-			this.zoomControlsCleanup = null;
-		}
-	}
+ 		if (this.zoomControlsCleanup) {
+ 			this.zoomControlsCleanup();
+ 			this.zoomControlsCleanup = null;
+ 		}
+
+ 		if (this.lockButton) {
+ 			this.lockButton.remove();
+ 			this.lockButton = null;
+ 		}
+ 	}
 }
