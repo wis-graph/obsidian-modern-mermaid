@@ -2,6 +2,8 @@
 
 Render latest Mermaid diagrams with support for light/dark themes and image copy functionality.
 
+[**한국어 버전**](./README-KO.md) | English
+
 ## Mermaid Version Support
 
 | Platform | Mermaid Version | Checked |
