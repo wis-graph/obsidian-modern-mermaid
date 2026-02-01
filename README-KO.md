@@ -140,10 +140,16 @@ flowchart LR
 
 Mermaid 애니메이션에 대해 자세히 알아보기: [Mermaid 문서](https://mermaid.js.org/syntax/flowchart.html#animation)
 
-## 스크린샷
+## 왜 이 플러그인인가?
 
-![Modern Mermaid Demo 1](./mermaid-demo-1.png)
-![Modern Mermaid Demo 2](./mermaid-demo-2.png)
+Obsidian의 내장 Mermaid 렌더러는 오래된 버전(v11.4.1)을 사용하므로 최신 Mermaid 기능과 구문을 사용할 수 없습니다. 이 플러그인은 항상 **최신 Mermaid 버전**을 가져와서 사용하므로 다음에 액세스할 수 있습니다:
+
+- 최신 다이어그램 유형 및 구문
+- 최신 버그 수정 및 개선 사항
+- 애니메이션 다이어그램 및 기타 최신 기능
+- Mermaid 문서 예제와 완전한 호환성
+
+플러그인은 빠른 로딩을 위해 Mermaid 라이브러리를 캐시하고 캐시되면 오프라인에서 작동합니다.
 
 ## 크레딧
 

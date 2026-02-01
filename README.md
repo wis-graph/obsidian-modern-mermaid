@@ -142,10 +142,16 @@ flowchart LR
 
 Learn more about Mermaid animations: [Mermaid Documentation](https://mermaid.js.org/syntax/flowchart.html#animation)
 
-## Screenshots
+## Why This Plugin?
 
-![Modern Mermaid Demo 1](./mermaid-demo-1.png)
-![Modern Mermaid Demo 2](./mermaid-demo-2.png)
+Obsidian's built-in Mermaid renderer uses an older version (v11.4.1), which means you can't use the latest Mermaid features and syntax. This plugin always fetches and uses the **latest Mermaid version**, giving you access to:
+
+- Newest diagram types and syntax
+- Latest bug fixes and improvements
+- Animated diagrams and other modern features
+- Full compatibility with Mermaid documentation examples
+
+The plugin caches the Mermaid library for fast loading and works offline once cached.
 
 ## Credits
 
