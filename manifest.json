@@ -1,10 +1,10 @@
 {
-	"id": "modern-mermaid",
-	"name": "Modern Mermaid",
-	"version": "2.1.0",
-	"minAppVersion": "0.15.0",
-	"description": "Render latest Mermaid diagrams.",
-	"author": "wis-graph",
-	"authorUrl": "https://github.com/wis-graph",
-	"isDesktopOnly": false
-}
+ 	"id": "modern-mermaid",
+ 	"name": "Modern Mermaid",
+ 	"version": "2.1.2",
+ 	"minAppVersion": "0.15.0",
+ 	"description": "Render latest Mermaid diagrams.",
+ 	"author": "wis-graph",
+ 	"authorUrl": "https://github.com/wis-graph",
+ 	"isDesktopOnly": false
+ }

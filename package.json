@@ -1,8 +1,8 @@
 {
-	"name": "obsidian-modern-mermaid",
-	"version": "2.1.1",
-	"description": "Render latest Mermaid diagrams in Obsidian",
-	"main": "main.js",
+ 	"name": "obsidian-modern-mermaid",
+ 	"version": "2.1.2",
+ 	"description": "Render latest Mermaid diagrams in Obsidian",
+ 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
