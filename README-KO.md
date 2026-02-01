@@ -146,11 +146,13 @@ Obsidian의 내장 Mermaid 렌더러는 오래된 버전(v11.4.1)을 사용하�
 
 **예시: Obsidian과 이 플러그인의 최신 Mermaid 구문 비교**
 
+최신 Mermaid 구문으로 작성된 코드:
+![Mermaid 코드](./mermaid-demo-1.png)
+
 Obsidian의 내장 Mermaid (v11.4.1)는 최신 구문을 렌더링할 수 없습니다:
 ![Obsidian Mermaid - 렌더링 불가](./mermaid-demo-2.png)
 
-이 플러그인(항상 최신 버전)을 사용하면 같은 다이어그램이 완벽하게 렌더링됩니다:
-![Modern Mermaid - 완벽한 렌더링](./mermaid-demo-1.png)
+이 플러그인(항상 최신 버전)을 사용하면 위 코드로 작성된 다이어그램이 완벽하게 렌더링됩니다
 
 - 최신 다이어그램 유형 및 구문
 - 최신 버그 수정 및 개선 사항
