@@ -345,6 +345,7 @@ var PanZoomHandler = class {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         const newScale = Math.min(Math.max(1, currentScale + delta * 0.05), 3);
         if (newScale === currentScale) {
           return;
@@ -364,6 +365,7 @@ var PanZoomHandler = class {
       } else if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         if (!this.svgElement) {
           return;
         }
@@ -407,7 +409,7 @@ var PanZoomHandler = class {
   }
   setup() {
     this.wrapper.addEventListener("mousedown", this.handleMouseDown);
-    this.wrapper.addEventListener("wheel", this.handleWheel);
+    this.wrapper.addEventListener("wheel", this.handleWheel, { passive: false });
     this.wrapper.addEventListener("dblclick", this.handleDoubleClick);
   }
   destroy() {
@@ -797,7 +799,7 @@ var _MermaidRenderer = class {
     button.innerHTML = this.locked ? LOCK_ICON : UNLOCK_ICON;
     button.style.position = "absolute";
     button.style.top = "8px";
-    button.style.right = "8px";
+    button.style.left = "38px";
     button.style.padding = "6px";
     button.style.backgroundColor = "rgba(128, 128, 128, 0.1)";
     button.style.color = this.locked ? "currentColor" : "#3b82f6";

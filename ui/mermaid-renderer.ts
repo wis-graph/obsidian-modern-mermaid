@@ -352,7 +352,7 @@ export class MermaidRenderer {
  		button.innerHTML = this.locked ? LOCK_ICON : UNLOCK_ICON;
  		button.style.position = 'absolute';
  		button.style.top = '8px';
- 		button.style.right = '8px';
+ 		button.style.left = '38px';
  		button.style.padding = '6px';
  		button.style.backgroundColor = 'rgba(128, 128, 128, 0.1)';
  		button.style.color = this.locked ? 'currentColor' : '#3b82f6';

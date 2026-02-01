@@ -42,7 +42,7 @@ export interface PanZoomState {
 
 	setup(): void {
 		this.wrapper.addEventListener('mousedown', this.handleMouseDown);
-		this.wrapper.addEventListener('wheel', this.handleWheel);
+		this.wrapper.addEventListener('wheel', this.handleWheel, { passive: false });
 		this.wrapper.addEventListener('dblclick', this.handleDoubleClick);
 	}
 
@@ -97,6 +97,7 @@ export interface PanZoomState {
 		if (e.ctrlKey || e.metaKey) {
 			e.preventDefault();
 			e.stopPropagation();
+			e.stopImmediatePropagation();
 
 			const newScale = Math.min(Math.max(1, currentScale + delta * 0.05), 3);
 
@@ -124,6 +125,7 @@ export interface PanZoomState {
 		} else if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
 			e.preventDefault();
 			e.stopPropagation();
+			e.stopImmediatePropagation();
 
 			if (!this.svgElement) {
 				return;
