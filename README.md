@@ -69,6 +69,8 @@ When **Enable Pan & Zoom** is enabled in settings, you can:
   - `+` button: Zoom in
   - ⟲ button: Reset to original size and position
 
+![Pan & Zoom Demo](./pan and zoom.gif)
+
 ### Settings
 
 You can customize plugin behavior in Obsidian Settings → Modern Mermaid:
