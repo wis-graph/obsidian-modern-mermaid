@@ -309,9 +309,6 @@ var PanZoomHandler = class {
     this.locked = true;
     this.enableTouchpadPan = false;
     this.handleMouseDown = (e) => {
-      if (this.locked) {
-        return;
-      }
       e.preventDefault();
       this.state.startX = e.clientX - this.state.translateX;
       this.state.startY = e.clientY - this.state.translateY;
@@ -337,9 +334,6 @@ var PanZoomHandler = class {
       this.updateTransform();
     };
     this.handleWheel = (e) => {
-      if (this.locked) {
-        return;
-      }
       const delta = -Math.sign(e.deltaY);
       const currentScale = this.state.scale;
       if (e.ctrlKey || e.metaKey) {
@@ -362,7 +356,12 @@ var PanZoomHandler = class {
         this.state.translateX = mouseX - mouseXInSVG * newScale;
         this.state.translateY = mouseY - mouseYInSVG * newScale;
         this.updateTransform();
-      } else if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
+        return;
+      }
+      if (this.locked) {
+        return;
+      }
+      if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -375,9 +374,6 @@ var PanZoomHandler = class {
       }
     };
     this.handleDoubleClick = (e) => {
-      if (this.locked) {
-        return;
-      }
       e.preventDefault();
       const currentScale = this.state.scale;
       const targetScale = currentScale === 1 ? this.settings.doubleClickZoomLevel : 1;
@@ -409,7 +405,7 @@ var PanZoomHandler = class {
   }
   setup() {
     this.wrapper.addEventListener("mousedown", this.handleMouseDown);
-    this.wrapper.addEventListener("wheel", this.handleWheel, { passive: false });
+    this.wrapper.addEventListener("wheel", this.handleWheel, { passive: false, capture: true });
     this.wrapper.addEventListener("dblclick", this.handleDoubleClick);
   }
   destroy() {
@@ -554,8 +550,8 @@ var _MermaidRenderer = class {
     }
     const wrapper = document.createElement("div");
     wrapper.innerHTML = svg;
-    wrapper.style.cursor = this.locked ? "default" : "grab";
-    wrapper.style.userSelect = this.locked ? "text" : "none";
+    wrapper.style.cursor = "grab";
+    wrapper.style.userSelect = "none";
     wrapper.style.display = "inline-block";
     wrapper.style.textAlign = "center";
     el.innerHTML = "";
@@ -826,12 +822,8 @@ var _MermaidRenderer = class {
       button.innerHTML = this.locked ? LOCK_ICON : UNLOCK_ICON;
       button.style.color = this.locked ? "currentColor" : "#3b82f6";
       button.style.opacity = this.locked ? "0.7" : "1";
-      button.title = this.locked ? "Pan & zoom locked (click to unlock)" : "Pan & zoom unlocked (click to lock)";
-      if (this.currentWrapper) {
-        panZoomHandler.setLocked(this.locked);
-        this.currentWrapper.style.cursor = this.locked ? "default" : "grab";
-        this.currentWrapper.style.userSelect = this.locked ? "text" : "none";
-      }
+      button.title = this.locked ? "Wheel pan/zoom locked (click to unlock)" : "Wheel pan/zoom unlocked (click to lock)";
+      panZoomHandler.setLocked(this.locked);
     };
     button.addEventListener("mouseenter", mouseEnterHandler);
     button.addEventListener("mouseleave", mouseLeaveHandler);

@@ -42,7 +42,7 @@ export interface PanZoomState {
 
 	setup(): void {
 		this.wrapper.addEventListener('mousedown', this.handleMouseDown);
-		this.wrapper.addEventListener('wheel', this.handleWheel, { passive: false });
+		this.wrapper.addEventListener('wheel', this.handleWheel, { passive: false, capture: true });
 		this.wrapper.addEventListener('dblclick', this.handleDoubleClick);
 	}
 
@@ -56,19 +56,16 @@ export interface PanZoomState {
 		this.wrapper.removeEventListener('dblclick', this.handleDoubleClick);
 	}
 
-	private handleMouseDown = (e: MouseEvent) => {
- 		if (this.locked) {
- 			return;
- 		}
- 		e.preventDefault();
- 		this.state.startX = e.clientX - this.state.translateX;
- 		this.state.startY = e.clientY - this.state.translateY;
- 		this.state.panning = true;
- 		this.isPanningActive = true;
- 		this.wrapper.style.cursor = 'grabbing';
- 		window.addEventListener('mousemove', this.handleWindowMouseMove);
- 		window.addEventListener('mouseup', this.handleWindowMouseUp);
- 	};
+private handleMouseDown = (e: MouseEvent) => {
+		e.preventDefault();
+		this.state.startX = e.clientX - this.state.translateX;
+		this.state.startY = e.clientY - this.state.translateY;
+		this.state.panning = true;
+		this.isPanningActive = true;
+		this.wrapper.style.cursor = 'grabbing';
+		window.addEventListener('mousemove', this.handleWindowMouseMove);
+		window.addEventListener('mouseup', this.handleWindowMouseUp);
+	};
 
 	private handleWindowMouseUp = () => {
 		this.state.panning = false;
@@ -87,10 +84,6 @@ export interface PanZoomState {
 	};
 
 	private handleWheel = (e: WheelEvent) => {
-		if (this.locked) {
-			return;
-		}
-
 		const delta = -Math.sign(e.deltaY);
 		const currentScale = this.state.scale;
 
@@ -122,7 +115,14 @@ export interface PanZoomState {
 			this.state.translateY = mouseY - mouseYInSVG * newScale;
 
 			this.updateTransform();
-		} else if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
+			return;
+		}
+
+		if (this.locked) {
+			return;
+		}
+
+		if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
 			e.preventDefault();
 			e.stopPropagation();
 			e.stopImmediatePropagation();
@@ -138,11 +138,7 @@ export interface PanZoomState {
 		}
 	};
 
-	private handleDoubleClick = (e: MouseEvent) => {
-		if (this.locked) {
-			return;
-		}
-
+private handleDoubleClick = (e: MouseEvent) => {
 		e.preventDefault();
 
 		const currentScale = this.state.scale;

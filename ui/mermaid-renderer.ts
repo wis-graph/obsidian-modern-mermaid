@@ -62,8 +62,8 @@ export class MermaidRenderer {
 
  		const wrapper = document.createElement('div');
  		wrapper.innerHTML = svg;
- 		wrapper.style.cursor = this.locked ? 'default' : 'grab';
- 		wrapper.style.userSelect = this.locked ? 'text' : 'none';
+ 		wrapper.style.cursor = 'grab';
+ 		wrapper.style.userSelect = 'none';
  		wrapper.style.display = 'inline-block';
  		wrapper.style.textAlign = 'center';
 
@@ -382,13 +382,9 @@ export class MermaidRenderer {
  			button.innerHTML = this.locked ? LOCK_ICON : UNLOCK_ICON;
  			button.style.color = this.locked ? 'currentColor' : '#3b82f6';
  			button.style.opacity = this.locked ? '0.7' : '1';
- 			button.title = this.locked ? 'Pan & zoom locked (click to unlock)' : 'Pan & zoom unlocked (click to lock)';
+ 			button.title = this.locked ? 'Wheel pan/zoom locked (click to unlock)' : 'Wheel pan/zoom unlocked (click to lock)';
 
- 			if (this.currentWrapper) {
- 				panZoomHandler.setLocked(this.locked);
- 				this.currentWrapper.style.cursor = this.locked ? 'default' : 'grab';
- 				this.currentWrapper.style.userSelect = this.locked ? 'text' : 'none';
- 			}
+ 			panZoomHandler.setLocked(this.locked);
  		};
 
  		button.addEventListener('mouseenter', mouseEnterHandler);
