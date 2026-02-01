@@ -1,5 +1,7 @@
 # Changelog
 
+[**한국어 버전**](./CHANGELOG-KO.md) | Korean
+
 ## [2.1.1] - 2026-02-01
 
 ### 🐛 Bug Fixes
