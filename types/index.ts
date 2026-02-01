@@ -9,8 +9,6 @@ export interface ModernMermaidSettings {
 	includeBackgroundInCopy: boolean;
 	enablePanZoom: boolean;
 	doubleClickZoomLevel: number;
-	panZoomLocked: boolean;
-	enableTouchpadPan: boolean;
 }
 
 export const DEFAULT_SETTINGS: ModernMermaidSettings = {
@@ -18,7 +16,5 @@ export const DEFAULT_SETTINGS: ModernMermaidSettings = {
 	transparentMerBackground: true,
 	includeBackgroundInCopy: true,
 	enablePanZoom: true,
-	doubleClickZoomLevel: 2,
-	panZoomLocked: true,
-	enableTouchpadPan: false
+	doubleClickZoomLevel: 2
 };

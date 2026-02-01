@@ -128,16 +128,16 @@ class ModernMermaidSettingTab extends PluginSettingTab {
 				}));
 
 new Setting(containerEl)
- 			.setName('Double Click Zoom Level')
- 			.setDesc('Zoom level when double-clicking on diagram (1 = original size, 2 = 2x, 3 = 3x). Click again to reset.')
- 			.addSlider(slider => slider
- 				.setLimits(1.5, 5, 0.5)
- 				.setValue(this.plugin.settings.doubleClickZoomLevel)
- 				.setDynamicTooltip()
- 				.onChange(async (value) => {
- 					this.plugin.settings.doubleClickZoomLevel = value;
- 					await this.plugin.saveSettings();
- 				}));
+			.setName('Double Click Zoom Level')
+			.setDesc('Zoom level when double-clicking on diagram (1 = original size, 2 = 2x, 3 = 3x). Click again to reset.')
+			.addSlider(slider => slider
+				.setLimits(1.5, 5, 0.5)
+				.setValue(this.plugin.settings.doubleClickZoomLevel)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.doubleClickZoomLevel = value;
+					await this.plugin.saveSettings();
+				}));
 
  		new Setting(containerEl)
  			.setName('Pan & Zoom Locked by Default')

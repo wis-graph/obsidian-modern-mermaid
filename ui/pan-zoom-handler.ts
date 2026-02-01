@@ -23,18 +23,12 @@ export interface PanZoomState {
  		pointY: 0
  	};
  	private isPanningActive: boolean = false;
- 	private locked: boolean = true;
- 	private enableTouchpadPan: boolean = false;
 
  	constructor(
  		private wrapper: HTMLElement,
  		private svgElement: SVGElement | null,
- 		private settings: ModernMermaidSettings,
- 		locked: boolean = true,
- 		enableTouchpadPan: boolean = false
+ 		private settings: ModernMermaidSettings
  	) {
- 		this.locked = locked;
- 		this.enableTouchpadPan = enableTouchpadPan;
  		if (this.svgElement) {
  			this.svgElement.style.transformOrigin = '0 0';
  		}
@@ -42,7 +36,7 @@ export interface PanZoomState {
 
 	setup(): void {
 		this.wrapper.addEventListener('mousedown', this.handleMouseDown);
-		this.wrapper.addEventListener('wheel', this.handleWheel, { passive: false, capture: true });
+		this.wrapper.addEventListener('wheel', this.handleWheel);
 		this.wrapper.addEventListener('dblclick', this.handleDoubleClick);
 	}
 
@@ -89,8 +83,6 @@ private handleMouseDown = (e: MouseEvent) => {
 
 		if (e.ctrlKey || e.metaKey) {
 			e.preventDefault();
-			e.stopPropagation();
-			e.stopImmediatePropagation();
 
 			const newScale = Math.min(Math.max(1, currentScale + delta * 0.05), 3);
 
@@ -113,26 +105,6 @@ private handleMouseDown = (e: MouseEvent) => {
 
 			this.state.translateX = mouseX - mouseXInSVG * newScale;
 			this.state.translateY = mouseY - mouseYInSVG * newScale;
-
-			this.updateTransform();
-			return;
-		}
-
-		if (this.locked) {
-			return;
-		}
-
-		if (this.enableTouchpadPan && Math.abs(e.deltaX) > 0) {
-			e.preventDefault();
-			e.stopPropagation();
-			e.stopImmediatePropagation();
-
-			if (!this.svgElement) {
-				return;
-			}
-
-			this.state.translateX -= e.deltaX;
-			this.state.translateY -= e.deltaY;
 
 			this.updateTransform();
 		}
@@ -197,9 +169,5 @@ private handleDoubleClick = (e: MouseEvent) => {
 
 	getState(): PanZoomState {
 		return { ...this.state };
-	}
-
-	setLocked(locked: boolean): void {
-		this.locked = locked;
 	}
 }
