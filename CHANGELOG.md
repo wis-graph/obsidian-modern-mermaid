@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.1.1] - 2026-02-01
+
+### 🐛 Bug Fixes
+
+- Fixed memory leaks in event listeners and resource management
+- Properly cleaned up event listeners on plugin unload
+- Enhanced cleanup of plugin resources to prevent memory leaks
+
+### 📚 Documentation
+
+- Added Korean README (README-KO.md)
+- Added language switch between English and Korean versions
+- Added pan & zoom demo GIF showing mouse wheel zoom, drag to pan, and double-click zoom toggle
+- Improved README structure with "Why This Plugin" section at the top
+- Added clear explanations with images showing latest Mermaid version benefits
+
+---
+
 ## [2.1.0] - 2026-02-01
 
 ### 🎯 Code Refactoring
