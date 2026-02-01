@@ -2,6 +2,34 @@
 
 [**한국어 버전**](./CHANGELOG-KO.md) | Korean
 
+## [2.1.2] - 2026-02-02
+
+### 🖱️ Zoom Controls Improvements
+
+**Command-Based Zoom (Ctrl/Cmd + Wheel)**
+- Changed from always-on wheel zoom to Ctrl/Cmd + wheel for zooming
+- This change was made to prevent interference with document scrolling
+- Mouse wheel now allows normal document scrolling without blocking
+- Users can still zoom using Ctrl/Cmd + wheel when needed
+
+**Simplified Pan & Zoom**
+- Removed touchpad pan feature (two-finger panning)
+- Removed lock button and related settings
+- Pan & zoom controls simplified for better user experience
+
+**Always-On Features**
+- Drag to pan: Always works for smooth diagram navigation
+- Double-click zoom: Always works for quick zoom to configured level
+- Zoom control buttons (+ / - / reset): Always available in bottom-right corner
+
+### 📝 Breaking Changes
+
+- Zoom now requires Ctrl/Cmd (Windows/Linux) or Cmd (macOS) + wheel
+- Removed settings: "Pan & Zoom Locked by Default" and "Enable Touchpad Pan"
+- Removed lock button from diagram controls
+
+---
+
 ## [2.1.1] - 2026-02-01
 
 ### 🐛 Bug Fixes
