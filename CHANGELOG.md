@@ -2,6 +2,20 @@
 
 [**한국어 버전**](./CHANGELOG-KO.md) | Korean
 
+## [2.2.0] - 2026-02-02
+
+### ✨ New Features
+
+**Custom Height Support**
+- Added ability to set custom height for diagrams
+- Use comma-separated syntax: `width, height`
+- Width only: `300`
+- Height only: `, 400`
+- Width and height: `300, 400`
+- Supports spaces after comma: `, 400` or `300, 400`
+
+---
+
 ## [2.1.2] - 2026-02-02
 
 ### 🖱️ Zoom Controls Improvements
