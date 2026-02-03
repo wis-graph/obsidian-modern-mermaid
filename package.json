@@ -1,6 +1,6 @@
 {
  	"name": "obsidian-modern-mermaid",
- 	"version": "2.1.2",
+ 	"version": "2.2.0",
  	"description": "Render latest Mermaid diagrams in Obsidian",
  	"main": "main.js",
 	"scripts": {

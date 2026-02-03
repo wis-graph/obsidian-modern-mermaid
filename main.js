@@ -492,7 +492,7 @@ var _MermaidRenderer = class {
     _MermaidRenderer.activeHandlers.clear();
   }
   async render(source, el, theme, backgroundColor) {
-    const { width, source: actualSource } = this.parseWidth(source);
+    const { width, height, source: actualSource } = this.parseDimensions(source);
     const id = "mermaid-" + Math.random().toString(36).substr(2, 9);
     const themeConfig = theme === "dark" ? "dark" : "default";
     this.mermaid.initialize({ startOnLoad: false, theme: themeConfig });
@@ -510,7 +510,7 @@ var _MermaidRenderer = class {
     } else {
       this.renderWithoutPanZoom(svg, el);
     }
-    this.applyStyles(el, backgroundColor, width);
+    this.applyStyles(el, backgroundColor, width, height);
     this.addCopyButton(el, backgroundColor);
   }
   renderWithPanZoom(svg, el) {
@@ -588,7 +588,7 @@ var _MermaidRenderer = class {
       controlsDiv.remove();
     };
   }
-  applyStyles(el, backgroundColor, width) {
+  applyStyles(el, backgroundColor, width, height) {
     if (backgroundColor !== "transparent") {
       el.style.backgroundColor = backgroundColor;
     }
@@ -601,16 +601,24 @@ var _MermaidRenderer = class {
       el.style.width = `${width}px`;
       el.style.overflowX = "auto";
     }
+    if (height) {
+      el.style.height = `${height}px`;
+      el.style.overflowY = "auto";
+    }
   }
-  parseWidth(source) {
+  parseDimensions(source) {
+    var _a, _b;
     const lines = source.split("\n");
     const firstLine = lines[0].trim();
-    const widthMatch = firstLine.match(/^(\d+)$/);
-    if (widthMatch) {
-      const width = parseInt(widthMatch[1], 10);
-      return { width, source: lines.slice(1).join("\n").trimStart() };
+    const parts = firstLine.split(",");
+    const widthPart = (_a = parts[0]) == null ? void 0 : _a.trim();
+    const heightPart = (_b = parts[1]) == null ? void 0 : _b.trim();
+    const width = widthPart ? parseInt(widthPart, 10) : null;
+    const height = heightPart ? parseInt(heightPart, 10) : null;
+    if (width || height) {
+      return { width, height, source: lines.slice(1).join("\n").trimStart() };
     }
-    return { width: null, source };
+    return { width: null, height: null, source };
   }
   renderMermaidError(el, errorMessage) {
     el.innerHTML = `

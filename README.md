@@ -98,11 +98,11 @@ You can customize plugin behavior in Obsidian Settings → Modern Mermaid:
 - **Include Background in Copy**: Include background color when copying diagram as image
 - **Clear Cache**: Clear cached Mermaid library and force re-download
 
-### Custom Width
+### Custom Width & Height
 
-You can control the diagram size by adding the width (in pixels) on the first line of the code block:
+You can control the diagram size by adding dimensions (in pixels) on the first line of the code block:
 
-**Code:**
+**Width only:**
 ```mer
 300
 graph TD
@@ -110,10 +110,26 @@ graph TD
     B --> C[300px wide]
 ```
 
+**Height only:**
+```mer
+, 400
+graph TD
+    A[Fixed] --> B[Height]
+    B --> C[400px tall]
+```
+
+**Width and height:**
+```mer
+300, 400
+graph TD
+    A[Custom] --> B[Size]
+    B --> C[300x400px]
+```
+
 **Result:**
 ![Custom Width Example](./modern-mermaid-width.png)
 
-If you don't specify a width, the diagram will fill the available space in your note.
+If you don't specify dimensions, the diagram will fill the available space in your note.
 
 ### Transparent Background
 
